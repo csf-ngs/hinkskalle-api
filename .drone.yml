@@ -1,0 +1,11 @@
+---
+name: hinkskalle-api
+kind: pipeline
+
+steps:
+- name: testhase
+  image: python:3.8
+  commands:
+  - pip3 install nose2
+  - pip3 install -e .
+  - nose2
