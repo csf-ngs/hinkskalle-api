@@ -6,7 +6,6 @@
 import unittest
 from click.testing import CliRunner
 
-from hinkskalle_api import hinkskalle_api
 from hinkskalle_api import cli
 
 
