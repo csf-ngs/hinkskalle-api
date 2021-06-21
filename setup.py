@@ -10,7 +10,7 @@ with open('README.md') as readme_file:
 with open('CHANGELOG.md') as history_file:
     history = history_file.read()
 
-requirements = ['Click>=7.0', 'requests', 'PyYAML', 'click_log' ]
+requirements = ['Click>=7.0', 'requests', 'PyYAML', 'click_log', 'humanize' ]
 
 test_requirements = [ 'coverage', 'nose2' ]
 
