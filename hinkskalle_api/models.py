@@ -58,6 +58,5 @@ class Manifest:
   def __str__(self):
     return f"""- filename: {self.filename}
   size: {naturalsize(self.total_size)}
-  type: {self.type}
   tags: {','.join([ t.name for t in self.tags ])}
 """
