@@ -25,12 +25,15 @@ class HinkApi:
       key = os.environ.get('HINK_API_KEY')
     if not base or not key:
       self.config_file = os.environ.get('HINK_API_CFG', self.config_file)
-      with open(os.path.expanduser(self.config_file), 'r') as yml:
-          cfg = yaml.load(yml, Loader=yaml.SafeLoader)
-      if not base:
-          base=cfg.get('hink_api_base')
-      if not key:
-          key=cfg.get('hink_api_key')
+      try:
+        with open(os.path.expanduser(self.config_file), 'r') as yml:
+            cfg = yaml.load(yml, Loader=yaml.SafeLoader)
+        if not base:
+            base=cfg.get('hink_api_base')
+        if not key:
+            key=cfg.get('hink_api_key')
+      except FileNotFoundError:
+        pass
     if not base:
       raise Exception("Please configure HINK_API_BASE!")
     self.base: str = base
@@ -87,8 +90,11 @@ class HinkApi:
     if ret.status_code != requests.codes.ok:
       self.handle_error(ret)
     token = ret.json().get('data')
-    with open(os.path.expanduser(self.config_file), 'r') as yml:
-      cfg = yaml.load(yml, Loader=yaml.SafeLoader)
+    try:
+      with open(os.path.expanduser(self.config_file), 'r') as yml:
+        cfg = yaml.load(yml, Loader=yaml.SafeLoader)
+    except FileNotFoundError:
+      cfg={}
     cfg['hink_api_key']=token.get('token')
     cfg['hink_api_base']=self.base
     with open(os.path.expanduser(self.config_file), 'w') as cfgfh:

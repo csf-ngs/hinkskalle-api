@@ -35,7 +35,7 @@ class TestApi(unittest.TestCase):
   def test_no_config(self):
     with tempfile.TemporaryDirectory() as tmp_dir, mock.patch('hinkskalle_api.api.os.path.expanduser') as mock_exp:
       mock_exp.return_value = os.path.join(tmp_dir, 'test.yml')
-      with self.assertRaisesRegex(FileNotFoundError, r'/test\.yml'):
+      with self.assertRaisesRegex(Exception, r'Please configure'):
         api = HinkApi()
 
     with tempfile.TemporaryDirectory() as tmp_dir, mock.patch('hinkskalle_api.api.os.path.expanduser') as mock_exp:
