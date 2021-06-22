@@ -9,3 +9,18 @@ steps:
   - pip3 install nose2
   - pip3 install -e .
   - nose2
+- name: bauhaus
+  image: docker.ngs.vbcf.ac.at/singularity-builder
+  privileged: true
+  commands:
+    - invoke build
+- name: pushraus
+  image: docker.ngs.vbcf.ac.at/singularity-builder
+  environment:
+    HINKSKALLE_TOKEN:
+      from_secret: drone_puller_token
+  commands:
+    - /entrypoint.sh invoke push
+  when:
+    event:
+      - tag

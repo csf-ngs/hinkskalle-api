@@ -1,0 +1,5 @@
+build: singularity build hinkskalle-cli.sif Singularity
+name: hinkskalle-cli
+registry:
+  name: infra/hinkskalle-cli
+  tag: latest
