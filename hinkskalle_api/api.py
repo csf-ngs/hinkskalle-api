@@ -1,3 +1,4 @@
+from click.termui import echo_via_pager
 import requests
 import yaml
 import os
@@ -177,7 +178,7 @@ class HinkApi:
       prog = click.progressbar(length=int(ret.headers.get('Content-Length', -1)), label='🥤 Slurping:')
     
     hl = hashlib.sha256()
-    with open(outfn, 'wb') as outfh:
+    with open(os.path.basename(outfn), 'wb') as outfh:
       for chunk in ret.iter_content(chunk_size=65535): 
         outfh.write(chunk)
         if progress:
@@ -195,7 +196,6 @@ class HinkApi:
     
   def push_file(self, tag: str, container: str, filename: str, collection: str = 'default', entity: str = None, progress=False):
     entity = self._get_entity(entity)
-    logging.info("🚀 Uploading file...")
     is_tar = False
     orig_filename = filename
     if os.path.isdir(filename):
@@ -204,6 +204,7 @@ class HinkApi:
       is_tar = True
       filename = self._create_tar(filename, progress=progress)
 
+    logging.info("🚀 Uploading file...")
     with open(filename, 'rb') as infh:
       image_hash, image_size = self.push_blob(data=infh, entity=entity, collection=collection, container=container, progress=progress)
 
@@ -225,9 +226,9 @@ class HinkApi:
         "size": image_size,
         "annotations":{
           "io.deis.oras.content.unpack": "true" if is_tar else "false",
-          "org.opencontainers.image.title": os.path.basename(orig_filename)},
+          "org.opencontainers.image.title": orig_filename,
         }
-      ]
+      }]
     }
     logging.info("🚀 Pushing manifest")
     self.push_manifest(manifest=manifest, tag=tag, entity=entity, container=container, collection=collection)
@@ -251,7 +252,7 @@ class HinkApi:
 
   def _create_tar(self, directory: str, progress=False) -> str:
     tmpdir = tempfile.mkdtemp()
-    tmptar = os.path.join(tmpdir, f"{directory}.tar")
+    tmptar = os.path.join(tmpdir, f"{directory.replace('/', '_')}.tar")
     tmp = open(tmptar, 'wb')
     tar = tarfile.open(fileobj=tmp, mode='w:gz')
     totar = []
@@ -263,6 +264,7 @@ class HinkApi:
         totar.append(fullpath)
     if progress:
       prog = click.progressbar(length=total_size, label='📦 Tarring:')
+      prog.update(0)
     for f in sorted(totar):
       tar.add(f, recursive=False)
       if progress:
