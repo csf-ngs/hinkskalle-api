@@ -163,7 +163,7 @@ class HinkApi:
     if not to_fetch:
       raise Exception("Manifest not found")
 
-    ret = requests.get(f'{self.base}/v1/manifests/{m.id}/download', headers=self._make_headers(), stream=True)
+    ret = requests.get(f'{self.base}/v1/manifests/{to_fetch.id}/download', headers=self._make_headers(), stream=True)
     if ret.status_code != requests.codes.ok:
       self.handle_error(ret)
     
@@ -204,11 +204,11 @@ class HinkApi:
       is_tar = True
       filename = self._create_tar(filename, progress=progress)
 
-    logging.info("🚀 Uploading file...")
+    logging.info("⏳ Uploading file...")
     with open(filename, 'rb') as infh:
       image_hash, image_size = self.push_blob(data=infh, entity=entity, collection=collection, container=container, progress=progress)
 
-    logging.info("🚀 Uploading image config")
+    logging.info("⏳ Uploading image config...")
     cfg=b'{}'
     with io.BytesIO(cfg) as cfgfh:
       cfg_hash, cfg_size = self.push_blob(data=cfgfh, entity=entity, collection=collection, container=container, progress=progress)
@@ -230,7 +230,7 @@ class HinkApi:
         }
       }]
     }
-    logging.info("🚀 Pushing manifest")
+    logging.info("⏳ Pushing manifest...")
     self.push_manifest(manifest=manifest, tag=tag, entity=entity, container=container, collection=collection)
     if is_tar:
       os.unlink(filename)
@@ -275,7 +275,7 @@ class HinkApi:
     tmp.close()
     return tmptar
 
-  def push_blob(self, container: str, data: typing.Optional[typing.IO[typing.Any]] = None, collection: str = 'default', entity: str = None, progress=False) -> typing.Tuple[str, int]:
+  def push_blob(self, container: str, data: typing.BinaryIO, collection: str = 'default', entity: str = None, progress=False) -> typing.Tuple[str, int]:
     hl = hashlib.sha256()
     if progress:
       prog = click.progressbar(length=os.path.getsize(data.name) if hasattr(data, 'name') else 0,label='👀 Checksumming:')
@@ -295,11 +295,31 @@ class HinkApi:
     image_hash = hl.hexdigest()
     check = requests.head(f"{self.base}/v2/{entity}/{collection}/{container}/blobs/sha256:{image_hash}", headers=self._make_headers())
     if check.status_code == requests.codes.ok:
-      logger.info(f"File already on server, skipping upload.")
+      logger.info(f"😎 File already on server, skipping upload.")
       return image_hash, size
-    ret = requests.post(f"{self.base}/v2/{entity}/{collection}/{container}/blobs/uploads/", params={ 'digest': f'sha256:{image_hash}'}, data=data, headers=self._make_headers({ 'Content-Type': 'application/octet-stream' }))
+    
+    class MonitoredFile(io.BytesIO):
+      def __init__(self, hdl: typing.BinaryIO, length: int):
+        self.hdl = hdl
+        self.hdl.seek(0)
+        self.length = length
+        self.prog = None
+        if progress:
+          self.prog = click.progressbar(length=length, label='🚀 Pushing:')
+      
+      def read(self, size=-1) -> bytes:
+        if self.prog:
+          self.prog.update(size)
+        return self.hdl.read(size)
+
+      def __len__(self):
+        return self.length
+
+    ret = requests.post(f"{self.base}/v2/{entity}/{collection}/{container}/blobs/uploads/", params={ 'digest': f'sha256:{image_hash}'}, data=MonitoredFile(data, size), headers=self._make_headers({ 'Content-Type': 'application/octet-stream' }))
     if ret.status_code != requests.codes.ok:
       self.handle_error(ret)
+    if progress:
+      click.echo("")
     return image_hash, size
 
 

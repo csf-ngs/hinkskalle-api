@@ -104,9 +104,6 @@ def push(obj: HinkApi, filename: str, container: str, progress: bool):
   click.echo(f"Upload complete! (Take that, server!)")
 
 
-
-
-
 def split_container(container: str) -> typing.Tuple[typing.Optional[str], str, str]:
   el = container.split('/')
   if len(el) == 3:
