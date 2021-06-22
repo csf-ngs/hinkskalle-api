@@ -11,6 +11,7 @@ import json
 import io
 import tarfile
 import tempfile
+import shutil
 from humanize import naturalsize
 
 logger = logging.getLogger()
@@ -24,21 +25,23 @@ class HinkApi:
       base = os.environ.get('HINK_API_BASE')
     if not key:
       key = os.environ.get('HINK_API_KEY')
-    if not base or not key:
-      self.config_file = os.environ.get('HINK_API_CFG', self.config_file)
-      try:
-        with open(os.path.expanduser(self.config_file), 'r') as yml:
-            cfg = yaml.load(yml, Loader=yaml.SafeLoader)
-        if not base:
-            base=cfg.get('hink_api_base')
-        if not key:
-            key=cfg.get('hink_api_key')
-      except FileNotFoundError:
-        pass
+    self.config_file = os.environ.get('HINK_API_CFG', self.config_file)
+    try:
+      with open(os.path.expanduser(self.config_file), 'r') as yml:
+        cfg = yaml.load(yml, Loader=yaml.SafeLoader)
+    except FileNotFoundError:
+      cfg={}
+
+    if not base:
+      base=cfg.get('hink_api_base')
+    if not key:
+      key=cfg.get('hink_api_key')
     if not base:
       raise Exception("Please configure HINK_API_BASE!")
+
     self.base: str = base
-    self.key: str = key    
+    self.key: typing.Optional[str] = key
+    self.staging_path: typing.Optional[str] = cfg.get('hink_api_staging_path')
     if self.base.endswith('/'):
       self.base = self.base[:-1]
     
@@ -298,6 +301,18 @@ class HinkApi:
       logger.info(f"😎 File already on server, skipping upload.")
       return image_hash, size
     
+    if size > 1024*1024 and self.staging_path:
+      logger.info(f"switching to staged upload")
+      staged_fn = os.path.join(self.staging_path, f"sha256:{image_hash}")
+      os.makedirs(self.staging_path, exist_ok=True)
+      with open(staged_fn, 'wb') as staged_fh:
+        shutil.copyfileobj(data, staged_fh)
+      ret = requests.post(f"{self.base}/v2/{entity}/{collection}/{container}/blobs/uploads/", params={ 'staged': 1, 'digest': f'sha256:{image_hash}'}, headers=self._make_headers({ 'Content-Type': 'application/octet-stream' }))
+      if ret.status_code != requests.codes.ok:
+        self.handle_error(ret)
+      return image_hash, size
+
+
     class MonitoredFile(io.BytesIO):
       def __init__(self, hdl: typing.BinaryIO, length: int):
         self.hdl = hdl
