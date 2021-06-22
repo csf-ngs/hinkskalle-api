@@ -3,10 +3,11 @@ import sys
 import click
 import click_log
 import logging
-from hinkskalle_api import HinkApi
+import typing
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 click_log.basic_config(logger)
+from hinkskalle_api import HinkApi
 
 
 @click.group()
@@ -18,6 +19,14 @@ def cli(ctx, base, key):
     """Hinkli - talking to Hinkskalle"""
     ctx.obj = HinkApi(base, key)
     return 0
+
+@cli.command(short_help='get token')
+@click.option('--user', help='Username', prompt=True)
+@click.option('--password', help='Password', prompt=True, hide_input=True)
+@click.pass_obj
+def login(obj: HinkApi, user: str, password: str):
+  obj.get_token(username=user, password=password)
+  click.echo(f"Token stored in {obj.config_file}")
 
 @cli.command(short_help='list collections')
 @click.argument('entity', required=False)
@@ -46,13 +55,8 @@ def list_containers(obj: HinkApi, collection: str):
 @click.argument('container')
 @click.pass_obj
 def list_tags(obj: HinkApi, container: str):
-  el = container.split('/')
-  if len(el) == 3:
-    tags = obj.list_tags(entity=el[0], collection=el[1], container=el[2])
-  elif len(el) == 2:
-    tags = obj.list_tags(entity=None, collection=el[0], container=el[1])
-  else:
-    tags = obj.list_tags(entity=None, collection='default', container=container)
+  entity, collection, container = split_container(container)
+  tags = obj.list_tags(entity=entity, collection=collection, container=container)
   
   click.echo_via_pager(f"{t}\n" for t in tags)
 
@@ -60,17 +64,54 @@ def list_tags(obj: HinkApi, container: str):
 @click.argument('container')
 @click.pass_obj
 def list_downloads(obj: HinkApi, container: str):
-  el = container.split('/')
-  if len(el) == 3:
-    manifests = obj.list_manifests(entity=el[0], collection=el[1], container=el[2])
-  elif len(el) == 2:
-    manifests = obj.list_manifests(entity=None, collection=el[0], container=el[1])
-  else:
-    manifests = obj.list_manifests(entity=None, collection='default', container=container)
+  entity, collection, container = split_container(container)
+  manifests = obj.list_manifests(entity=entity, collection=collection, container=container)
   
   manifests = [ m for m in manifests if m.type=='oras' and m.filename!='(none)' and m.filename != '(multiple)']
   
   click.echo_via_pager(f"{m}\n" for m in manifests)
+
+@cli.command(short_help='download data')
+@click.argument('container')
+@click.option('--out', help='Filename/directory to save to')
+@click.option('--progress/--no-progress', help='Show progress bar', default=True)
+@click.pass_obj
+def fetch(obj: HinkApi, container: str, out: str, progress: bool):
+  if not ':' in container:
+    tag = 'latest'
+  else:
+    container, tag = container.split(':')
+  
+  entity, collection, container = split_container(container)
+  out = obj.fetch_blob(entity=entity, collection=collection, container=container, tag=tag, progress=progress)
+  click.echo(f"{out}: Download complete")
+
+@cli.command(short_help='push data')
+@click.argument('filename')
+@click.argument('container')
+@click.option('--progress/--no-progress', help='Show progress bar', default=True)
+@click.pass_obj
+def push(obj: HinkApi, filename: str, container: str, progress: bool):
+  if not ':' in container:
+    raise Exception("please provide tag [container]:[tag]")
+  container, tag = container.split(':')
+  entity, collection, container = split_container(container)
+  obj.push_file(entity=entity, collection=collection, container=container, tag=tag, progress=progress, filename=filename)
+  click.echo(f"Upload complete! (Take that, server!)")
+
+
+
+
+
+def split_container(container: str) -> typing.Tuple[typing.Optional[str], str, str]:
+  el = container.split('/')
+  if len(el) == 3:
+    return el[0], el[1], el[2]
+  elif len(el) == 2:
+    return None, el[0], el[1]
+  else:
+    return None, 'default', container
+
 
 if __name__ == "__main__":
     sys.exit(cli())  # pragma: no cover

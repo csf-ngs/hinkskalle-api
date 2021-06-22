@@ -47,7 +47,8 @@ class Tag:
 """
 
 class Manifest:
-  def __init__(self, hash: str, filename: str, type: str, total_size: str, tags: typing.List[Tag]):
+  def __init__(self, id: int, hash: str, filename: str, type: str, total_size: str, tags: typing.List[Tag]):
+    self.id = id
     self.hash = hash
     self.filename = filename
     self.type = type
@@ -56,7 +57,6 @@ class Manifest:
 
   def __str__(self):
     return f"""- filename: {self.filename}
-  hash: sha256:{self.hash}
   size: {naturalsize(self.total_size)}
   type: {self.type}
   tags: {','.join([ t.name for t in self.tags ])}
