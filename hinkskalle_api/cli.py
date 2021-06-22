@@ -76,7 +76,11 @@ def list_downloads(obj: HinkApi, container: str):
 @click.option('--out', help='Filename/directory to save to')
 @click.option('--progress/--no-progress', help='Show progress bar', default=True)
 @click.pass_obj
-def fetch(obj: HinkApi, container: str, out: str, progress: bool):
+def pull(obj: HinkApi, container: str, out: str, progress: bool):
+  """CONTAINER is a library path like user.name/collection/container:tag
+
+  user.name can be omitted.
+  """
   if not ':' in container:
     tag = 'latest'
   else:
@@ -86,7 +90,7 @@ def fetch(obj: HinkApi, container: str, out: str, progress: bool):
   out = obj.fetch_blob(entity=entity, collection=collection, container=container, tag=tag, progress=progress)
   click.echo(f"{out}: Download complete")
 
-@cli.command(short_help='push data')
+@cli.command(short_help='upload data')
 @click.argument('filename')
 @click.argument('container')
 @click.option('--progress/--no-progress', help='Show progress bar', default=True)
