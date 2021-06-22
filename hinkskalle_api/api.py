@@ -90,8 +90,10 @@ class HinkApi:
     with open(os.path.expanduser(self.config_file), 'r') as yml:
       cfg = yaml.load(yml, Loader=yaml.SafeLoader)
     cfg['hink_api_key']=token.get('token')
+    cfg['hink_api_base']=self.base
     with open(os.path.expanduser(self.config_file), 'w') as cfgfh:
       yaml.dump(cfg, cfgfh)
+    self.token=token.get('token')
 
 
   def list_collections(self, entity: str=None) -> typing.List[Collection]:
