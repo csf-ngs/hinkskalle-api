@@ -301,13 +301,13 @@ class HinkApi:
       logger.info(f"😎 File already on server, skipping upload.")
       return image_hash, size
     
-    if size > 1024*1024 and self.staging_path:
-      logger.info(f"switching to staged upload")
+    if size > 100*1024*1024 and self.staging_path:
+      logger.info(f"📥 switching to staged upload")
       staged_fn = os.path.join(self.staging_path, f"sha256:{image_hash}")
       os.makedirs(self.staging_path, exist_ok=True)
       with open(staged_fn, 'wb') as staged_fh:
         shutil.copyfileobj(data, staged_fh)
-      ret = requests.post(f"{self.base}/v2/{entity}/{collection}/{container}/blobs/uploads/", params={ 'staged': 1, 'digest': f'sha256:{image_hash}'}, headers=self._make_headers({ 'Content-Type': 'application/octet-stream' }))
+      ret = requests.post(f"{self.base}/v2/{entity}/{collection}/{container}/blobs/uploads/", params={ 'staged': 1, 'digest': f'sha256.{image_hash}'}, headers=self._make_headers({ 'Content-Type': 'application/octet-stream' }))
       if ret.status_code != requests.codes.ok:
         self.handle_error(ret)
       return image_hash, size
