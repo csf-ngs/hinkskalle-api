@@ -48,13 +48,14 @@ class Tag:
 """
 
 class Manifest:
-  def __init__(self, id: int, hash: str, filename: str, type: str, total_size: str, tags: typing.List[Tag]):
+  def __init__(self, id: int, hash: str, filename: str, type: str, total_size: str, tags: typing.List[Tag], image_hash=None):
     self.id = id
     self.hash = hash
     self.filename = filename
     self.type = type
     self.total_size = total_size
     self.tags = tags
+    self.image_hash = image_hash
 
   def __str__(self):
     return f"""- filename: {self.filename}
