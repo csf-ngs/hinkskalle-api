@@ -54,8 +54,10 @@ class HinkApi:
       json: dict = r.json()
     except:
       return r.raise_for_status()
-    if 'errors' in json:
+    if 'errors' in json and type(json['errors']) is list:
       raise Exception(f"HINK-ERROR: {json['errors'][0]['detail']}")
+    elif 'errors' in json and type(json['errors']) is dict:
+      raise Exception(f"HINK-ERROR: {json['errors']}")
     elif 'message' in json:
       raise Exception(f"HINK-ERROR: {json['message']}")
     else:
@@ -151,6 +153,7 @@ class HinkApi:
         type=m.get('type'),
         total_size=m.get('total_size'),
         tags=[ Tag(name=t) for t in m.get('tags') ],
+        image_hash=m.get('images', [None])[0],
       ) for m in manifests ]
     
   def get_manifest(self, container: str, collection: str='default', entity: str=None, tag: str=None, hash: str=None) -> Manifest:
@@ -167,7 +170,7 @@ class HinkApi:
         to_fetch = m
         break
     if not to_fetch:
-      raise Exception("Manifest not found")
+      raise Exception(f"Manifest {entity}/{collection}/{container}:{tag}/{hash} not found")
     return to_fetch
 
   def fetch_blob(self, container: str, collection: str='default', entity: str=None, tag: str=None, hash: str=None, out: str = None, progress=False) -> str:
@@ -305,6 +308,8 @@ class HinkApi:
     image_hash = hl.hexdigest()
     check = requests.head(f"{self.base}/v2/{entity}/{collection}/{container}/blobs/sha256:{image_hash}", headers=self._make_headers())
     if check.status_code == requests.codes.ok:
+      if not check.headers.get('Docker-Content-Digest'):
+        raise Exception("something went wrong - no content digest header!")
       logger.info(f"😎 File already on server, skipping upload.")
       return image_hash, size
     
@@ -344,10 +349,15 @@ class HinkApi:
       click.echo("")
     return image_hash, size
 
-  def get_download_token(self, tag: str, container: str, collection: str = 'default', entity: str = None, expiration=None, username=None) -> str:
-    entity = self._get_entity(entity)
+  def get_download_token(self, manifest: typing.Optional[Manifest], tag: str = None, container: str = None, collection: str = 'default', entity: str = None, expiration=None, username=None) -> str:
+    if not manifest:
+      entity = self._get_entity(entity)
+      if not container or not tag:
+        raise Exception(f"container and tag are required")
 
-    to_fetch = self.get_manifest(tag=tag, container=container, collection=collection, entity=entity)
+      to_fetch = self.get_manifest(tag=tag, container=container, collection=collection, entity=entity)
+    else:
+      to_fetch = manifest
 
     post_data = {
       'type': 'manifest',
@@ -367,7 +377,6 @@ class HinkApi:
       except ValueError:
         raise Exception("expiration must be a int (days)")
 
-      print(expiration, timegm(datetime.utcnow().utctimetuple()))
       post_data['username'] = username
       post_data['exp'] = expiration
 
