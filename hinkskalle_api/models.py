@@ -16,8 +16,9 @@ class BaseModel:
 """
 
 class User:
-  def __init__(self, username: str):
+  def __init__(self, username: str, is_admin: bool):
     self.username = username
+    self.is_admin = is_admin
 
 class Entity(BaseModel):
   def __init__(self, **kwargs):

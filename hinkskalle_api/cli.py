@@ -71,6 +71,19 @@ def list_downloads(obj: HinkApi, container: str):
   
   click.echo_via_pager(f"{m}\n" for m in manifests)
 
+@cli.command(short_help='get download token')
+@click.argument('container')
+@click.option('--expiration', help='Expiration time in days', default=14)
+@click.pass_obj
+def download_token(obj: HinkApi, container: str, expiration: int):
+  entity, collection, container, tag = split_tagged_container(container)
+  if not tag:
+    raise Exception("Please provide container:tag")
+  link = obj.get_download_token(entity=entity, collection=collection, container=container, tag=tag, expiration=expiration)
+  click.echo("There you go:")
+  click.echo(f"curl -fOJ {link}")
+  
+
 @cli.command(short_help='download data')
 @click.argument('container')
 @click.option('--out', help='Filename/directory to save to')
@@ -79,14 +92,12 @@ def list_downloads(obj: HinkApi, container: str):
 def pull(obj: HinkApi, container: str, out: str, progress: bool):
   """CONTAINER is a library path like user.name/collection/container:tag
 
-  user.name can be omitted.
+  user.name can be omitted, tag defaults to 'latest'
   """
-  if not ':' in container:
+  entity, collection, container, tag = split_tagged_container(container)
+  if not tag:
     tag = 'latest'
-  else:
-    container, tag = container.split(':')
   
-  entity, collection, container = split_container(container)
   out = obj.fetch_blob(entity=entity, collection=collection, container=container, tag=tag, progress=progress)
   click.echo(f"{out}: Download complete")
 
@@ -96,13 +107,20 @@ def pull(obj: HinkApi, container: str, out: str, progress: bool):
 @click.option('--progress/--no-progress', help='Show progress bar', default=True)
 @click.pass_obj
 def push(obj: HinkApi, filename: str, container: str, progress: bool):
-  if not ':' in container:
-    raise Exception("please provide tag [container]:[tag]")
-  container, tag = container.split(':')
-  entity, collection, container = split_container(container)
+  entity, collection, container, tag = split_tagged_container(container)
+  if not tag:
+    raise Exception("Please provide container:tag")
   obj.push_file(entity=entity, collection=collection, container=container, tag=tag, progress=progress, filename=filename)
   click.echo(f"Upload complete! (Take that, server!)")
 
+
+def split_tagged_container(container: str) -> typing.Tuple[typing.Optional[str], str, str, typing.Optional[str]]:
+  if ':' in container:
+    container, tag = container.split(':')
+  else:
+    tag = None
+  entity, collection, container = split_container(container)
+  return entity, collection, container, tag
 
 def split_container(container: str) -> typing.Tuple[typing.Optional[str], str, str]:
   el = container.split('/')

@@ -13,6 +13,8 @@ import tarfile
 import tempfile
 import shutil
 from humanize import naturalsize
+from calendar import timegm
+from datetime import datetime, timedelta
 
 logger = logging.getLogger()
 
@@ -66,20 +68,20 @@ class HinkApi:
     return hdr
   
   def get(self, route, **kwargs):
-    r = requests.get(self.base+route, headers=self._make_headers())
+    r = requests.get(self.base+route, headers=self._make_headers(), **kwargs)
     if r.status_code != requests.codes.ok:
       self.handle_error(r)
-    return r.json().get('data', **kwargs)
+    return r.json().get('data', r.json())
   
   def post(self, route, data, **kwargs):
     r = requests.post(self.base+route, headers=self._make_headers(), json=data, **kwargs)
     if r.status_code != requests.codes.ok:
       self.handle_error(r)
-    return r.json().get('data')
+    return r.json().get('data', r.json())
 
   def get_current_user(self) -> User:
     ret = self.get('/v1/token-status')
-    self.user = User(username=ret.get('username'))
+    self.user = User(username=ret.get('username'), is_admin=ret.get('isAdmin'))
     return self.user
   
   def _get_entity(self, entity: str = None) -> str:
@@ -151,7 +153,8 @@ class HinkApi:
         tags=[ Tag(name=t) for t in m.get('tags') ],
       ) for m in manifests ]
     
-  def fetch_blob(self, container: str, collection: str='default', entity: str=None, tag: str=None, hash: str=None, out: str = None, progress=False) -> str:
+  def get_manifest(self, container: str, collection: str='default', entity: str=None, tag: str=None, hash: str=None) -> Manifest:
+    entity = self._get_entity(entity)
     manifests = self.list_manifests(container, collection, entity)
     to_fetch: typing.Optional[Manifest] = None
     if not tag and not hash:
@@ -165,6 +168,10 @@ class HinkApi:
         break
     if not to_fetch:
       raise Exception("Manifest not found")
+    return to_fetch
+
+  def fetch_blob(self, container: str, collection: str='default', entity: str=None, tag: str=None, hash: str=None, out: str = None, progress=False) -> str:
+    to_fetch = self.get_manifest(container=container, collection=collection, entity=entity, tag=tag, hash=hash)
 
     ret = requests.get(f'{self.base}/v1/manifests/{to_fetch.id}/download', headers=self._make_headers(), stream=True)
     if ret.status_code != requests.codes.ok:
@@ -337,5 +344,32 @@ class HinkApi:
       click.echo("")
     return image_hash, size
 
+  def get_download_token(self, tag: str, container: str, collection: str = 'default', entity: str = None, expiration=None, username=None) -> str:
+    entity = self._get_entity(entity)
 
+    to_fetch = self.get_manifest(tag=tag, container=container, collection=collection, entity=entity)
 
+    post_data = {
+      'type': 'manifest',
+      'id': to_fetch.id,
+    }
+    if self.user.is_admin:
+      if not username:
+        if entity == 'default':
+          username = self.user.username
+        else:
+          username = entity
+
+      if not expiration:
+        expiration = 14
+      try:
+        expiration = timegm((datetime.utcnow() + timedelta(days=int(expiration))).utctimetuple())
+      except ValueError:
+        raise Exception("expiration must be a int (days)")
+
+      print(expiration, timegm(datetime.utcnow().utctimetuple()))
+      post_data['username'] = username
+      post_data['exp'] = expiration
+
+    ret = self.post('/v1/get-download-token', data=post_data)
+    return ret['location']
