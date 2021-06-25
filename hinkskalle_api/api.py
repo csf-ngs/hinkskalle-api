@@ -207,7 +207,7 @@ class HinkApi:
 
     return outfn
     
-  def push_file(self, tag: str, container: str, filename: str, collection: str = 'default', entity: str = None, progress=False):
+  def push_file(self, tag: str, container: str, filename: str, collection: str = 'default', entity: str = None, progress=False) -> str:
     entity = self._get_entity(entity)
     is_tar = False
     orig_filename = filename
@@ -217,7 +217,7 @@ class HinkApi:
       is_tar = True
       filename = self._create_tar(filename, progress=progress)
 
-    logging.info("⏳ Uploading file...")
+    logging.info(f"⏳ Uploading file to {entity}/{collection}/{container}:{tag}...")
     with open(filename, 'rb') as infh:
       image_hash, image_size = self.push_blob(data=infh, entity=entity, collection=collection, container=container, progress=progress)
 
@@ -247,6 +247,7 @@ class HinkApi:
     self.push_manifest(manifest=manifest, tag=tag, entity=entity, container=container, collection=collection)
     if is_tar:
       os.unlink(filename)
+    return image_hash
 
 
   def push_manifest(self, manifest: dict, tag: str, container: str, collection: str = 'default', entity: str = None) -> str:
