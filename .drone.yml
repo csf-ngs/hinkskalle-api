@@ -3,6 +3,10 @@ name: hinkskalle-api
 kind: pipeline
 
 steps:
+- name: fetch
+  image: drone/git
+  commands:
+    - git fetch --tags
 - name: testhase
   image: python:3.8
   commands:
