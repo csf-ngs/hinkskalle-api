@@ -1,4 +1,3 @@
-from click.termui import echo_via_pager
 import requests
 import yaml
 import os
