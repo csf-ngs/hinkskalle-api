@@ -45,7 +45,7 @@ The registry and token should now be stored in `~/.hink_api.yml` and available f
 Your most likely use case will be downloading data provided via Hinkskalle.
 
 ```bash
-# shoows available collections of containers
+# shows available collections of containers
 hinkli list-collections
 hinkli list-containers [collection]
 hinkli list-downloads [collection]/[container]
@@ -110,3 +110,15 @@ You can use these env variables to override:
 - `HINK_API_BASE`
 - `HINK_API_KEY`
 - `HINK_API_CFG` - to look for the config file in a different location
+
+# Development
+
+You can regenerate the models from the Hinkskalle swagger/openapi definition:
+
+```bash
+pip3 install git+https://ngs.vbcf.ac.at/repo/software/swagspotta.git
+# from pkg.ngs.vbcf.ac.at production:
+share/create_models.sh
+# from your local hinkskalle dev server:
+share/create_models.sh http://localhost:7660/swagger
+```
