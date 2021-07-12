@@ -1,3 +1,7 @@
+# next
+
+- internal: proper models from swagger
+
 # v0.3.1 (2021-06-25)
 
 - internal api changes
