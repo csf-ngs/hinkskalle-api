@@ -1,0 +1,15 @@
+{% import 'python/utils.py.j2' as utils %}
+
+def plainTo{{ classname }}(json: dict) -> {{ classname }}:
+  obj = {{ classname }}()
+  {{ utils.deserialize(fields) }}
+  return obj
+
+def serialize{{ classname }}(obj: {{ classname }}) -> dict:
+  json = {}
+  {{ utils.serialize(fields) }}
+  return json
+
+@dataclass
+class {{ classname }}:
+  {{ utils.auto_attributes(fields) }}

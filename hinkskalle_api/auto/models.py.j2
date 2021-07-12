@@ -1,0 +1,18 @@
+from __future__ import annotations
+from dataclasses import dataclass, field
+import typing
+from datetime import datetime
+from humanize import naturalsize
+
+{% for class in classes %}
+{{ class }}
+{% endfor %}
+
+@dataclass
+class Tag:
+  name: str
+  arch: typing.Optional[str] = None
+  def __str__(self):
+    return f"""- name: {self.name}
+  arch: {self.arch}
+"""

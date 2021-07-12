@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 
 logger = logging.getLogger()
 
-from .models import *
+from .auto.models import *
 
 class HinkApi:
   config_file = '~/.hink_api.yml'
@@ -82,15 +82,15 @@ class HinkApi:
 
   def get_current_user(self) -> User:
     ret = self.get('/v1/token-status')
-    self.user = User(username=ret.get('username'), is_admin=ret.get('isAdmin'))
+    self.user = User(username=ret.get('username'), isAdmin=ret.get('isAdmin'))
     return self.user
   
   def _get_entity(self, entity: str = None) -> str:
     if not self.user:
       self.get_current_user()
-    if not entity:
-      entity = self.user.username
-    return entity
+    if not entity and self.user:
+      entity = typing.cast(str, self.user.username)
+    return typing.cast(str, entity)
 
   def get_token(self, username: str, password: str):
     ret = requests.post(f'{self.base}/v1/get-token', json={'username': username, 'password': password })
@@ -106,29 +106,20 @@ class HinkApi:
     cfg['hink_api_base']=self.base
     with open(os.path.expanduser(self.config_file), 'w') as cfgfh:
       yaml.dump(cfg, cfgfh)
-    self.token=token.get('token')
+    self.token=plainToToken(token.get('token'))
 
 
   def list_collections(self, entity: str=None) -> typing.List[Collection]:
     entity = self._get_entity(entity)
 
     colls = self.get(f'/v1/collections/{entity}')
-    return [ Collection(
-        name=c.get('name'), 
-        description=c.get('description'), 
-        size=c.get('size'), 
-        usedQuota=c.get('usedQuota')) for c in colls ]
+    return [ plainToCollection(c) for c in colls ]
 
   def list_containers(self, collection: str='default', entity: str=None) -> typing.List[Container]:
     entity = self._get_entity(entity)
 
     containers = self.get(f'/v1/containers/{entity}/{collection}')
-    return [ Container(
-        name=c.get('name'), 
-        type=c.get('type'), 
-        description=c.get('description'), 
-        size=c.get('size'), 
-        usedQuota=c.get('usedQuota')) for c in containers ]
+    return [ plainToContainer(c) for c in containers ]
 
   def list_tags(self, container: str, collection: str='default', entity: str=None) -> typing.List[Tag]:
     entity = self._get_entity(entity)
@@ -145,15 +136,12 @@ class HinkApi:
     entity = self._get_entity(entity)
 
     manifests = self.get(f'/v1/containers/{entity}/{collection}/{container}/manifests')
-    return [ Manifest(
-        id=m.get('id'),
-        hash=m.get('hash'), 
-        filename=m.get('filename'), 
-        type=m.get('type'),
-        total_size=m.get('total_size'),
-        tags=[ Tag(name=t) for t in m.get('tags') ],
-        image_hash=m.get('images', [None])[0],
-      ) for m in manifests ]
+    ret: typing.List[Manifest] = []
+    for m in manifests:
+      mani = plainToManifest(m)
+      mani.image_hash = m.get('images', [None])
+      ret.append(mani)
+    return ret
     
   def get_manifest(self, container: str, collection: str='default', entity: str=None, tag: str=None, hash: str=None) -> Manifest:
     entity = self._get_entity(entity)
@@ -162,7 +150,7 @@ class HinkApi:
     if not tag and not hash:
       raise Exception(f"Need either hash or tag")
     for m in manifests:
-      if tag and tag in [ t.name for t in m.tags ]:
+      if tag and tag in m.tags:
         to_fetch = m
         break
       elif hash and m.hash == hash:
@@ -179,6 +167,8 @@ class HinkApi:
     if ret.status_code != requests.codes.ok:
       self.handle_error(ret)
     
+    if not to_fetch.filename:
+      raise Exception('blob filename unset')
     outfn = to_fetch.filename
     if out and os.path.isdir(out):
       outfn = os.path.join(out, outfn)
@@ -188,12 +178,14 @@ class HinkApi:
     
     if progress:
       prog = click.progressbar(length=int(ret.headers.get('Content-Length', -1)), label='🥤 Slurping:')
+    else:
+      prog = None
     
     hl = hashlib.sha256()
     with open(os.path.basename(outfn), 'wb') as outfh:
       for chunk in ret.iter_content(chunk_size=65535): 
         outfh.write(chunk)
-        if progress:
+        if prog:
           prog.update(len(chunk))
         hl.update(chunk)
     if progress:
@@ -278,9 +270,11 @@ class HinkApi:
     if progress:
       prog = click.progressbar(length=total_size, label='📦 Tarring:')
       prog.update(1)
+    else:
+      prog = None
     for f in sorted(totar):
       tar.add(f, recursive=False)
-      if progress:
+      if prog:
         prog.update(os.path.getsize(f))
     if progress:
       click.echo("")
@@ -292,6 +286,8 @@ class HinkApi:
     hl = hashlib.sha256()
     if progress:
       prog = click.progressbar(length=os.path.getsize(data.name) if hasattr(data, 'name') else 0,label='👀 Checksumming:')
+    else:
+      prog = None
     size = 0
     while True:
       chunk = data.read(65535)
@@ -299,7 +295,7 @@ class HinkApi:
         break
       size += len(chunk)
       hl.update(chunk)
-      if progress:
+      if prog:
         prog.update(len(chunk))
     data.seek(0)
     if progress:
@@ -349,7 +345,7 @@ class HinkApi:
       click.echo("")
     return image_hash, size
 
-  def get_download_token(self, manifest: typing.Optional[Manifest], tag: str = None, container: str = None, collection: str = 'default', entity: str = None, expiration=None, username=None) -> str:
+  def get_download_token(self, manifest: typing.Optional[Manifest]=None, tag: str = None, container: str = None, collection: str = 'default', entity: str = None, expiration=None, username=None) -> str:
     if not manifest:
       entity = self._get_entity(entity)
       if not container or not tag:
@@ -363,7 +359,9 @@ class HinkApi:
       'type': 'manifest',
       'id': to_fetch.id,
     }
-    if self.user.is_admin:
+    if not self.user:
+      raise Exception("user not defined")
+    if self.user.isAdmin:
       if not username:
         if entity == 'default':
           username = self.user.username
