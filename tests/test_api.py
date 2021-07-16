@@ -50,6 +50,7 @@ class TestApi(unittest.TestCase):
     api = HinkApi(base='http://testha.se', key='secret')
     self.assertDictEqual(api._make_headers({ 'bla': 'fasel'}), { 'bla': 'fasel', 'Authorization': 'Bearer secret'})
   
+  @mock.patch.dict(os.environ, { 'HINK_API_BASE': 'http://testha.se', 'HINK_API_KEY': 'secret'})
   def test_tar_exclude(self):
     api = HinkApi()
     cwd = os.getcwd()
