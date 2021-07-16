@@ -1,5 +1,6 @@
-# next
+# v0.3.2 (2021-07-16)
 
+- *feature* exclude files from tar for directory push with --excludes
 - internal: proper models from swagger
 
 # v0.3.1 (2021-06-25)

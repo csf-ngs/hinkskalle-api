@@ -3,6 +3,7 @@ from unittest import mock
 import os
 import os.path
 import tempfile
+import tarfile
 
 from hinkskalle_api import HinkApi
 
@@ -48,3 +49,39 @@ class TestApi(unittest.TestCase):
   def test_make_headers(self):
     api = HinkApi(base='http://testha.se', key='secret')
     self.assertDictEqual(api._make_headers({ 'bla': 'fasel'}), { 'bla': 'fasel', 'Authorization': 'Bearer secret'})
+  
+  def test_tar_exclude(self):
+    api = HinkApi()
+    cwd = os.getcwd()
+    with tempfile.TemporaryDirectory() as tmpdir:
+      os.chdir(tmpdir)
+      os.mkdir('packme')
+      with open('packme/testfile', 'w') as fh:
+        fh.write("something\n")
+      tarf = api._create_tar('packme')
+      tar = tarfile.open(tarf, 'r:gz')
+      self.assertCountEqual(tar.getnames(), ['packme/testfile'])
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+      os.chdir(tmpdir)
+      os.mkdir('packme')
+      with open('packme/testfile', 'w') as fh:
+        fh.write("something\n")
+      tarf = api._create_tar('packme', excludes=[r'testfile'])
+      tar = tarfile.open(tarf, 'r:gz')
+      self.assertCountEqual(tar.getnames(), [])
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+      os.chdir(tmpdir)
+      os.mkdir('packme')
+      os.mkdir('packme/subdir')
+      with open('packme/testfile', 'w') as fh:
+        fh.write("something\n")
+      with open('packme/subdir/testfile', 'w') as fh:
+        fh.write("something\n")
+      tarf = api._create_tar('packme', excludes=[r'subdir'])
+      tar = tarfile.open(tarf, 'r:gz')
+      self.assertCountEqual(tar.getnames(), ['packme/testfile'])
+
+
+    os.chdir(cwd)

@@ -1,4 +1,5 @@
 """Console script for hinkskalle_api."""
+import re
 import sys
 import click
 import click_log
@@ -78,7 +79,7 @@ def list_downloads(obj: HinkApi, container: str):
 def download_token(obj: HinkApi, container: str, expiration: int):
   entity, collection, container, tag = split_tagged_container(container)
   if not tag:
-    raise Exception("Please provide container:tag")
+    raise click.ClickException("Please provide container:tag")
   link = obj.get_download_token(entity=entity, collection=collection, container=container, tag=tag, expiration=expiration)
   click.echo("There you go:")
   click.echo(f"curl -fOJ {link}")
@@ -104,13 +105,25 @@ def pull(obj: HinkApi, container: str, out: str, progress: bool):
 @cli.command(short_help='upload data')
 @click.argument('filename')
 @click.argument('container')
+@click.option('--exclude', '-e', help='When creating tar, exclude files matching these regexes', multiple=True)
+@click.option('--exclude-file', help='Read exclude patterns from this file (one per line)', type=click.File())
 @click.option('--progress/--no-progress', help='Show progress bar', default=True)
 @click.pass_obj
-def push(obj: HinkApi, filename: str, container: str, progress: bool):
+def push(obj: HinkApi, filename: str, container: str, progress: bool, exclude: typing.Tuple, exclude_file: typing.TextIO):
   entity, collection, container, tag = split_tagged_container(container)
+  if exclude_file:
+    exclude = exclude + tuple([ l.rstrip() for l in exclude_file.readlines() if not l.startswith('#') ])
+  
+  exclude_regexes: typing.List[typing.Pattern] = []
+  for l in exclude:
+    try:
+      exclude_regexes.append(re.compile(l))
+    except re.error as rerr:
+      raise click.ClickException(f"pattern `{l}` invalid: {rerr}")
+
   if not tag:
-    raise Exception("Please provide container:tag")
-  obj.push_file(entity=entity, collection=collection, container=container, tag=tag, progress=progress, filename=filename)
+    raise click.ClickException("Please provide container:tag")
+  obj.push_file(entity=entity, collection=collection, container=container, tag=tag, progress=progress, filename=filename, excludes=exclude_regexes)
   click.echo(f"Upload complete! (Take that, server!)")
 
 

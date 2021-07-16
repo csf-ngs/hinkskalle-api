@@ -11,6 +11,7 @@ import io
 import tarfile
 import tempfile
 import shutil
+import re
 from humanize import naturalsize
 from calendar import timegm
 from datetime import datetime, timedelta
@@ -198,7 +199,7 @@ class HinkApi:
 
     return outfn
     
-  def push_file(self, tag: str, container: str, filename: str, collection: str = 'default', entity: str = None, progress=False) -> str:
+  def push_file(self, tag: str, container: str, filename: str, collection: str = 'default', entity: str = None, progress=False, excludes: typing.List[typing.Union[typing.Pattern, str]]=[]) -> str:
     entity = self._get_entity(entity)
     is_tar = False
     orig_filename = filename
@@ -206,7 +207,7 @@ class HinkApi:
       if orig_filename.endswith('/'):
         orig_filename = orig_filename[:-1]
       is_tar = True
-      filename = self._create_tar(filename, progress=progress)
+      filename = self._create_tar(filename, progress=progress, excludes=excludes)
 
     logging.info(f"⏳ Uploading file to {entity}/{collection}/{container}:{tag}...")
     with open(filename, 'rb') as infh:
@@ -255,16 +256,30 @@ class HinkApi:
       raise Exception(f"Manifest checksum mismatch: {manifest_hash} != {upload_hash}")
     return manifest_hash
 
-  def _create_tar(self, directory: str, progress=False) -> str:
+  def _create_tar(self, directory: str, progress=False, excludes: typing.List[typing.Union[typing.Pattern, str]]=[]) -> str:
     tmpdir = tempfile.mkdtemp()
     tmptar = os.path.join(tmpdir, f"{directory.replace('/', '_')}.tar")
     tmp = open(tmptar, 'wb')
     tar = tarfile.open(fileobj=tmp, mode='w:gz')
     totar = []
     total_size = 0
+    def is_match(fullpath: str) -> bool:
+      skip = False
+      for pat in excludes:
+        if re.search(pat, fullpath):
+          logger.debug(f"excluding {fullpath}, match with {pat}")
+          print(f"excluding {fullpath}, match with {pat}")
+          skip=True
+          break
+      return skip
+
     for root, dirs, files in os.walk(directory, topdown=True):
+      dirs[:] = [ d for d in dirs if not is_match(os.path.join(root, d)) ]
       for f in files:
         fullpath = os.path.join(root, f)
+        if is_match(fullpath):
+          continue
+
         total_size+=os.path.getsize(fullpath)
         totar.append(fullpath)
     if progress:
