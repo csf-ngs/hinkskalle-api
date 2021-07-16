@@ -28,3 +28,13 @@ steps:
   when:
     event:
       - tag
+- name: plauderaus
+  image: pkg.ngs.vbcf.ac.at/infra/changelog-hook
+  environment:
+    WEBHOOK_URL:
+      from_secret: CHANGELOG_WEBHOOK_URL
+  commands:
+  - /extract.sh CHANGELOG.md
+  when:
+    event:
+      - tag
