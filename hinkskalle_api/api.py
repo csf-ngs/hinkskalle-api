@@ -80,6 +80,12 @@ class HinkApi:
     if r.status_code != requests.codes.ok:
       self.handle_error(r)
     return r.json().get('data', r.json())
+  
+  def put(self, route, data, **kwargs):
+    r = requests.put(self.base+route, headers=self._make_headers(), json=data, **kwargs)
+    if r.status_code != requests.codes.ok:
+      self.handle_error(r)
+    return r.json().get('data', r.json())
 
   def get_current_user(self) -> User:
     ret = self.get('/v1/token-status')
@@ -115,12 +121,40 @@ class HinkApi:
 
     colls = self.get(f'/v1/collections/{entity}')
     return [ plainToCollection(c) for c in colls ]
+  
+  def get_collection(self, collection: str, entity: str=None) -> Collection:
+    entity = self._get_entity(entity)
+    coll = self.get(f'/v1/collections/{entity}/{collection}')
+    return plainToCollection(coll)
+
+  def create_collection(self, collection: Collection) -> Collection:
+    coll = self.post(f'/v1/collections', serializeCollection(collection))
+    return plainToCollection(coll)
+
+  def update_collection(self, collection: Collection) -> Collection:
+    coll = self.put(f'/v1/collections/{collection.entityName}/{collection.name}', serializeCollection(collection))
+    return plainToCollection(coll)
 
   def list_containers(self, collection: str='default', entity: str=None) -> typing.List[Container]:
     entity = self._get_entity(entity)
 
     containers = self.get(f'/v1/containers/{entity}/{collection}')
     return [ plainToContainer(c) for c in containers ]
+  
+  def get_container(self, container: str, collection: str='default', entity: str=None) -> Container:
+    entity = self._get_entity(entity)
+
+    cont = self.get(f'/v1/containers/{entity}/{collection}/{container}')
+    return plainToContainer(cont)
+  
+  def create_container(self, container: Container) -> Container:
+    cont = self.post(f'/v1/containers', serializeContainer(container))
+    return plainToContainer(cont)
+
+  def update_container(self, container: Container) -> Container:
+    cont = self.put(f'/v1/containers/{container.entityName}/{container.collectionName}/{container.name}', serializeContainer(container))  
+    return plainToContainer(cont)
+
 
   def list_tags(self, container: str, collection: str='default', entity: str=None) -> typing.List[Tag]:
     entity = self._get_entity(entity)
@@ -199,7 +233,7 @@ class HinkApi:
 
     return outfn
     
-  def push_file(self, tag: str, container: str, filename: str, collection: str = 'default', entity: str = None, progress=False, excludes: typing.List[typing.Union[typing.Pattern, str]]=[]) -> str:
+  def push_file(self, tag: str, container: str, filename: str, collection: str = 'default', entity: str = None, progress=False, excludes: typing.List[typing.Union[typing.Pattern, str]]=[], private=False) -> str:
     entity = self._get_entity(entity)
     is_tar = False
     orig_filename = filename
@@ -211,12 +245,12 @@ class HinkApi:
 
     logging.info(f"⏳ Uploading file to {entity}/{collection}/{container}:{tag}...")
     with open(filename, 'rb') as infh:
-      image_hash, image_size = self.push_blob(data=infh, entity=entity, collection=collection, container=container, progress=progress)
+      image_hash, image_size = self.push_blob(data=infh, entity=entity, collection=collection, container=container, progress=progress, private=private)
 
     logging.info("⏳ Uploading image config...")
     cfg=b'{}'
     with io.BytesIO(cfg) as cfgfh:
-      cfg_hash, cfg_size = self.push_blob(data=cfgfh, entity=entity, collection=collection, container=container, progress=progress)
+      cfg_hash, cfg_size = self.push_blob(data=cfgfh, entity=entity, collection=collection, container=container, progress=progress, private=private)
     
     manifest = {
       'schemaVersion': 2,
@@ -297,7 +331,7 @@ class HinkApi:
     tmp.close()
     return tmptar
 
-  def push_blob(self, container: str, data: typing.BinaryIO, collection: str = 'default', entity: str = None, progress=False) -> typing.Tuple[str, int]:
+  def push_blob(self, container: str, data: typing.BinaryIO, collection: str = 'default', entity: str = None, progress=False, private=False) -> typing.Tuple[str, int]:
     hl = hashlib.sha256()
     if progress:
       prog = click.progressbar(length=os.path.getsize(data.name) if hasattr(data, 'name') else 0,label='👀 Checksumming:')
@@ -330,7 +364,7 @@ class HinkApi:
       os.makedirs(self.staging_path, exist_ok=True)
       with open(staged_fn, 'wb') as staged_fh:
         shutil.copyfileobj(data, staged_fh)
-      ret = requests.post(f"{self.base}/v2/{entity}/{collection}/{container}/blobs/uploads/", params={ 'staged': 1, 'digest': f'sha256:{image_hash}'}, headers=self._make_headers({ 'Content-Type': 'application/octet-stream' }))
+      ret = requests.post(f"{self.base}/v2/{entity}/{collection}/{container}/blobs/uploads/", params={ 'staged': 1, 'digest': f'sha256:{image_hash}', 'private': private }, headers=self._make_headers({ 'Content-Type': 'application/octet-stream' }))
       if ret.status_code != requests.codes.ok:
         self.handle_error(ret)
       return image_hash, size
@@ -353,7 +387,7 @@ class HinkApi:
       def __len__(self):
         return self.length
 
-    ret = requests.post(f"{self.base}/v2/{entity}/{collection}/{container}/blobs/uploads/", params={ 'digest': f'sha256:{image_hash}'}, data=MonitoredFile(data, size), headers=self._make_headers({ 'Content-Type': 'application/octet-stream' }))
+    ret = requests.post(f"{self.base}/v2/{entity}/{collection}/{container}/blobs/uploads/", params={ 'digest': f'sha256:{image_hash}', 'private': private }, data=MonitoredFile(data, size), headers=self._make_headers({ 'Content-Type': 'application/octet-stream' }))
     if ret.status_code != requests.codes.ok:
       self.handle_error(ret)
     if progress:

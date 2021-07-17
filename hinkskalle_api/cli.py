@@ -107,14 +107,15 @@ def pull(obj: HinkApi, container: str, out: str, progress: bool):
 @click.argument('container')
 @click.option('--exclude', '-e', help='When creating tar, exclude files matching these regexes', multiple=True)
 @click.option('--exclude-file', help='Read exclude patterns from this file (one per line)', type=click.File())
+@click.option('--private/--no-private', help='Set private flag on container', default=False)
 @click.option('--progress/--no-progress', help='Show progress bar', default=True)
 @click.pass_obj
-def push(obj: HinkApi, filename: str, container: str, progress: bool, exclude: typing.Tuple, exclude_file: typing.TextIO):
+def push(obj: HinkApi, filename: str, container: str, progress: bool, exclude: typing.Tuple, exclude_file: typing.TextIO, private: bool):
   entity, collection, container, tag = split_tagged_container(container)
   if exclude_file:
     exclude = exclude + tuple([ l.rstrip() for l in exclude_file.readlines() if not l.startswith('#') ])
   
-  exclude_regexes: typing.List[typing.Pattern] = []
+  exclude_regexes: typing.List[typing.Union[typing.Pattern, str]] = []
   for l in exclude:
     try:
       exclude_regexes.append(re.compile(l))
@@ -123,7 +124,7 @@ def push(obj: HinkApi, filename: str, container: str, progress: bool, exclude: t
 
   if not tag:
     raise click.ClickException("Please provide container:tag")
-  obj.push_file(entity=entity, collection=collection, container=container, tag=tag, progress=progress, filename=filename, excludes=exclude_regexes)
+  obj.push_file(entity=entity, collection=collection, container=container, tag=tag, progress=progress, filename=filename, excludes=exclude_regexes, private=private)
   click.echo(f"Upload complete! (Take that, server!)")
 
 
