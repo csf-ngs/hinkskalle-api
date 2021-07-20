@@ -35,7 +35,7 @@ class TestCli(unittest.TestCase):
     with mock.patch('hinkskalle_api.api.HinkApi.push_file') as mock_push:
       result = runner.invoke(cli.cli, ['push', 'testhase', 'testhase:v1', '--exclude', 'oink'], catch_exceptions=False)
     self.assertEqual(result.exit_code, 0)
-    mock_push.assert_called_with(entity=None, collection='default', container='testhase', tag='v1', progress=True, filename='testhase', excludes=[re.compile('oink')])
+    mock_push.assert_called_with(entity=None, collection='default', container='testhase', tag='v1', progress=True, filename='testhase', excludes=[re.compile('oink')], private=False)
   
   @mock.patch.dict(os.environ, { 'HINK_API_BASE': 'http://testha.se', 'HINK_API_KEY': 'secret'})
   def test_push_exclude_file(self):
@@ -47,4 +47,4 @@ class TestCli(unittest.TestCase):
         ofh.write(".*\n")
       result = runner.invoke(cli.cli, ['push', 'testhase', 'testhase:v1', '--exclude-file', 'excludes'], catch_exceptions=False)
     self.assertEqual(result.exit_code, 0)
-    mock_push.assert_called_with(entity=None, collection='default', container='testhase', tag='v1', progress=True, filename='testhase', excludes=[re.compile('oink'), re.compile('.*')])
+    mock_push.assert_called_with(entity=None, collection='default', container='testhase', tag='v1', progress=True, filename='testhase', excludes=[re.compile('oink'), re.compile('.*')], private=False)
