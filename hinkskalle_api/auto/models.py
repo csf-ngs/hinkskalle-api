@@ -9,21 +9,21 @@ from humanize import naturalsize
 
 def plainToCollection(json: dict) -> Collection:
   obj = Collection()
-  obj.containers = json['containers']
-  obj.createdAt = datetime.fromisoformat(json.get('createdAt', '')) if json.get('createdAt') else None
-  obj.createdBy = json['createdBy']
-  obj.customData = json['customData']
-  obj.deleted = bool(json['deleted'])
-  obj.deletedAt = datetime.fromisoformat(json.get('deletedAt', '')) if json.get('deletedAt') else None
-  obj.description = json['description']
-  obj.entity = json['entity']
-  obj.entityName = json['entityName']
-  obj.id = json['id']
-  obj.name = json['name']
-  obj.private = bool(json['private'])
-  obj.size = json['size']
-  obj.updatedAt = datetime.fromisoformat(json.get('updatedAt', '')) if json.get('updatedAt') else None
-  obj.usedQuota = json['usedQuota']
+  obj.containers = json.get('containers')
+  obj.createdAt = datetime.fromisoformat(json['createdAt']) if json.get('createdAt') else None
+  obj.createdBy = json.get('createdBy')
+  obj.customData = json.get('customData')
+  obj.deleted = bool(json['deleted']) if json.get('deleted') else None
+  obj.deletedAt = datetime.fromisoformat(json['deletedAt']) if json.get('deletedAt') else None
+  obj.description = json.get('description')
+  obj.entity = json.get('entity')
+  obj.entityName = json.get('entityName')
+  obj.id = json.get('id')
+  obj.name = json.get('name')
+  obj.private = bool(json['private']) if json.get('private') else None
+  obj.size = json.get('size')
+  obj.updatedAt = datetime.fromisoformat(json['updatedAt']) if json.get('updatedAt') else None
+  obj.usedQuota = json.get('usedQuota')
   
   return obj
 
@@ -49,7 +49,7 @@ def serializeCollection(obj: Collection) -> dict:
 
 @dataclass
 class Collection:
-  containers: list[str] = field(default_factory=list)
+  containers: typing.Optional[str] = None
   createdAt: typing.Optional[datetime] = None
   createdBy: typing.Optional[str] = None
   customData: typing.Optional[str] = None
@@ -77,31 +77,31 @@ class Collection:
 
 def plainToContainer(json: dict) -> Container:
   obj = Container()
-  obj.archTags = json['archTags']
-  obj.collection = json['collection']
-  obj.collectionName = json['collectionName']
-  obj.createdAt = datetime.fromisoformat(json.get('createdAt', '')) if json.get('createdAt') else None
-  obj.createdBy = json['createdBy']
-  obj.customData = json['customData']
-  obj.deleted = bool(json['deleted'])
-  obj.deletedAt = datetime.fromisoformat(json.get('deletedAt', '')) if json.get('deletedAt') else None
-  obj.description = json['description']
-  obj.downloadCount = json['downloadCount']
-  obj.entity = json['entity']
-  obj.entityName = json['entityName']
-  obj.fullDescription = json['fullDescription']
-  obj.id = json['id']
-  obj.imageTags = json['imageTags']
-  obj.images = json['images']
-  obj.name = json['name']
-  obj.private = bool(json['private'])
-  obj.readOnly = bool(json['readOnly'])
-  obj.size = json['size']
-  obj.stars = json['stars']
-  obj.type = json['type']
-  obj.updatedAt = datetime.fromisoformat(json.get('updatedAt', '')) if json.get('updatedAt') else None
-  obj.usedQuota = json['usedQuota']
-  obj.vcsUrl = json['vcsUrl']
+  obj.archTags = json.get('archTags')
+  obj.collection = json.get('collection')
+  obj.collectionName = json.get('collectionName')
+  obj.createdAt = datetime.fromisoformat(json['createdAt']) if json.get('createdAt') else None
+  obj.createdBy = json.get('createdBy')
+  obj.customData = json.get('customData')
+  obj.deleted = bool(json['deleted']) if json.get('deleted') else None
+  obj.deletedAt = datetime.fromisoformat(json['deletedAt']) if json.get('deletedAt') else None
+  obj.description = json.get('description')
+  obj.downloadCount = json.get('downloadCount')
+  obj.entity = json.get('entity')
+  obj.entityName = json.get('entityName')
+  obj.fullDescription = json.get('fullDescription')
+  obj.id = json.get('id')
+  obj.imageTags = json.get('imageTags')
+  obj.images = json.get('images')
+  obj.name = json.get('name')
+  obj.private = bool(json['private']) if json.get('private') else None
+  obj.readOnly = bool(json['readOnly']) if json.get('readOnly') else None
+  obj.size = json.get('size')
+  obj.stars = json.get('stars')
+  obj.type = json.get('type')
+  obj.updatedAt = datetime.fromisoformat(json['updatedAt']) if json.get('updatedAt') else None
+  obj.usedQuota = json.get('usedQuota')
+  obj.vcsUrl = json.get('vcsUrl')
   
   return obj
 
@@ -152,7 +152,7 @@ class Container:
   fullDescription: typing.Optional[str] = None
   id: typing.Optional[str] = None
   imageTags: typing.Optional[dict] = None
-  images: list[str] = field(default_factory=list)
+  images: typing.Optional[str] = None
   name: typing.Optional[str] = None
   private: typing.Optional[bool] = None
   readOnly: typing.Optional[bool] = None
@@ -175,20 +175,20 @@ class Container:
 
 def plainToEntity(json: dict) -> Entity:
   obj = Entity()
-  obj.collections = json['collections']
-  obj.createdAt = datetime.fromisoformat(json.get('createdAt', '')) if json.get('createdAt') else None
-  obj.createdBy = json['createdBy']
-  obj.customData = json['customData']
-  obj.defaultPrivate = bool(json['defaultPrivate'])
-  obj.deleted = bool(json['deleted'])
-  obj.deletedAt = datetime.fromisoformat(json.get('deletedAt', '')) if json.get('deletedAt') else None
-  obj.description = json['description']
-  obj.id = json['id']
-  obj.name = json['name']
-  obj.quota = json['quota']
-  obj.size = json['size']
-  obj.updatedAt = datetime.fromisoformat(json.get('updatedAt', '')) if json.get('updatedAt') else None
-  obj.usedQuota = json['usedQuota']
+  obj.collections = json.get('collections')
+  obj.createdAt = datetime.fromisoformat(json['createdAt']) if json.get('createdAt') else None
+  obj.createdBy = json.get('createdBy')
+  obj.customData = json.get('customData')
+  obj.defaultPrivate = bool(json['defaultPrivate']) if json.get('defaultPrivate') else None
+  obj.deleted = bool(json['deleted']) if json.get('deleted') else None
+  obj.deletedAt = datetime.fromisoformat(json['deletedAt']) if json.get('deletedAt') else None
+  obj.description = json.get('description')
+  obj.id = json.get('id')
+  obj.name = json.get('name')
+  obj.quota = json.get('quota')
+  obj.size = json.get('size')
+  obj.updatedAt = datetime.fromisoformat(json['updatedAt']) if json.get('updatedAt') else None
+  obj.usedQuota = json.get('usedQuota')
   
   return obj
 
@@ -213,7 +213,7 @@ def serializeEntity(obj: Entity) -> dict:
 
 @dataclass
 class Entity:
-  collections: list[str] = field(default_factory=list)
+  collections: typing.Optional[str] = None
   createdAt: typing.Optional[datetime] = None
   createdBy: typing.Optional[str] = None
   customData: typing.Optional[str] = None
@@ -240,20 +240,20 @@ class Entity:
 
 def plainToUser(json: dict) -> User:
   obj = User()
-  obj.createdAt = datetime.fromisoformat(json.get('createdAt', '')) if json.get('createdAt') else None
-  obj.createdBy = json['createdBy']
-  obj.deleted = bool(json['deleted'])
-  obj.deletedAt = datetime.fromisoformat(json.get('deletedAt', '')) if json.get('deletedAt') else None
-  obj.email = json['email']
-  obj.firstname = json['firstname']
-  obj.groups = [ plainToGroup(o) for o in json['groups']]
-  obj.id = json['id']
-  obj.isActive = bool(json['isActive'])
-  obj.isAdmin = bool(json['isAdmin'])
-  obj.lastname = json['lastname']
-  obj.source = json['source']
-  obj.updatedAt = datetime.fromisoformat(json.get('updatedAt', '')) if json.get('updatedAt') else None
-  obj.username = json['username']
+  obj.createdAt = datetime.fromisoformat(json['createdAt']) if json.get('createdAt') else None
+  obj.createdBy = json.get('createdBy')
+  obj.deleted = bool(json['deleted']) if json.get('deleted') else None
+  obj.deletedAt = datetime.fromisoformat(json['deletedAt']) if json.get('deletedAt') else None
+  obj.email = json.get('email')
+  obj.firstname = json.get('firstname')
+  obj.groups = [ plainToGroup(o) for o in json.get('groups', [])]
+  obj.id = json.get('id')
+  obj.isActive = bool(json['isActive']) if json.get('isActive') else None
+  obj.isAdmin = bool(json['isAdmin']) if json.get('isAdmin') else None
+  obj.lastname = json.get('lastname')
+  obj.source = json.get('source')
+  obj.updatedAt = datetime.fromisoformat(json['updatedAt']) if json.get('updatedAt') else None
+  obj.username = json.get('username')
   
   return obj
 
@@ -298,14 +298,14 @@ class User:
 
 def plainToGroup(json: dict) -> Group:
   obj = Group()
-  obj.createdAt = datetime.fromisoformat(json.get('createdAt', '')) if json.get('createdAt') else None
-  obj.createdBy = json['createdBy']
-  obj.deleted = bool(json['deleted'])
-  obj.deletedAt = datetime.fromisoformat(json.get('deletedAt', '')) if json.get('deletedAt') else None
-  obj.email = json['email']
-  obj.id = json['id']
-  obj.name = json['name']
-  obj.updatedAt = datetime.fromisoformat(json.get('updatedAt', '')) if json.get('updatedAt') else None
+  obj.createdAt = datetime.fromisoformat(json['createdAt']) if json.get('createdAt') else None
+  obj.createdBy = json.get('createdBy')
+  obj.deleted = bool(json['deleted']) if json.get('deleted') else None
+  obj.deletedAt = datetime.fromisoformat(json['deletedAt']) if json.get('deletedAt') else None
+  obj.email = json.get('email')
+  obj.id = json.get('id')
+  obj.name = json.get('name')
+  obj.updatedAt = datetime.fromisoformat(json['updatedAt']) if json.get('updatedAt') else None
   
   return obj
 
@@ -338,24 +338,26 @@ class Group:
 
 def plainToManifest(json: dict) -> Manifest:
   obj = Manifest()
-  obj.collection = json['collection']
-  obj.collectionName = json['collectionName']
-  obj.container = json['container']
-  obj.containerName = json['containerName']
-  obj.content = json['content']
-  obj.createdAt = datetime.fromisoformat(json.get('createdAt', '')) if json.get('createdAt') else None
-  obj.createdBy = json['createdBy']
-  obj.downloadCount = json['downloadCount']
-  obj.entity = json['entity']
-  obj.entityName = json['entityName']
-  obj.filename = json['filename']
-  obj.hash = json['hash']
-  obj.id = json['id']
-  obj.images = json['images']
-  obj.tags = json['tags']
-  obj.total_size = json['total_size']
-  obj.type = json['type']
-  obj.updatedAt = datetime.fromisoformat(json.get('updatedAt', '')) if json.get('updatedAt') else None
+  obj.collection = json.get('collection')
+  obj.collectionName = json.get('collectionName')
+  obj.container = json.get('container')
+  obj.containerName = json.get('containerName')
+  obj.content = json.get('content')
+  obj.createdAt = datetime.fromisoformat(json['createdAt']) if json.get('createdAt') else None
+  obj.createdBy = json.get('createdBy')
+  obj.downloadCount = json.get('downloadCount')
+  obj.entity = json.get('entity')
+  obj.entityName = json.get('entityName')
+  obj.filename = json.get('filename')
+  obj.hash = json.get('hash')
+  obj.id = json.get('id')
+  
+  obj.images = json.get('images', [])
+  
+  obj.tags = json.get('tags', [])
+  obj.total_size = json.get('total_size')
+  obj.type = json.get('type')
+  obj.updatedAt = datetime.fromisoformat(json['updatedAt']) if json.get('updatedAt') else None
   
   return obj
 
@@ -415,7 +417,8 @@ class Manifest:
 
 def plainToTagData(json: dict) -> TagData:
   obj = TagData()
-  obj.tags = json['tags']
+  
+  obj.tags = json.get('tags', [])
   
   return obj
 
@@ -434,18 +437,18 @@ class TagData:
 
 def plainToToken(json: dict) -> Token:
   obj = Token()
-  obj.comment = json['comment']
-  obj.createdAt = datetime.fromisoformat(json.get('createdAt', '')) if json.get('createdAt') else None
-  obj.createdBy = json['createdBy']
-  obj.deleted = bool(json['deleted'])
-  obj.deletedAt = datetime.fromisoformat(json.get('deletedAt', '')) if json.get('deletedAt') else None
-  obj.expiresAt = datetime.fromisoformat(json.get('expiresAt', '')) if json.get('expiresAt') else None
-  obj.id = json['id']
-  obj.source = json['source']
-  obj.token = json['token']
-  obj.updatedAt = datetime.fromisoformat(json.get('updatedAt', '')) if json.get('updatedAt') else None
+  obj.comment = json.get('comment')
+  obj.createdAt = datetime.fromisoformat(json['createdAt']) if json.get('createdAt') else None
+  obj.createdBy = json.get('createdBy')
+  obj.deleted = bool(json['deleted']) if json.get('deleted') else None
+  obj.deletedAt = datetime.fromisoformat(json['deletedAt']) if json.get('deletedAt') else None
+  obj.expiresAt = datetime.fromisoformat(json['expiresAt']) if json.get('expiresAt') else None
+  obj.id = json.get('id')
+  obj.source = json.get('source')
+  obj.token = json.get('token')
+  obj.updatedAt = datetime.fromisoformat(json['updatedAt']) if json.get('updatedAt') else None
   
-  obj.user = plainToUser(json['user'])
+  obj.user = plainToUser(json['user']) if json.get('user') else None
   
   return obj
 

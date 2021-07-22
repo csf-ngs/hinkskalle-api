@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import unittest
 from unittest import mock
 import os
@@ -61,6 +62,18 @@ class TestApi(unittest.TestCase):
       testdata.seek(0)
       api.push_blob(container='test', data=typing.cast(typing.BinaryIO, testdata), private=True)
     mock_post.assert_called_with(f'http://testha.se/v2/None/default/test/blobs/uploads/', data=mock.ANY, params={'digest': mock.ANY, 'private': True}, headers=mock.ANY)
+
+  @mock.patch.dict(os.environ, { 'HINK_API_BASE': 'http://testha.se', 'HINK_API_KEY': 'secret'})
+  def test_push_expires(self):
+    api = HinkApi()
+    with mock.patch('hinkskalle_api.api.requests.post') as mock_post, mock.patch('hinkskalle_api.api.requests.head') as mock_head:
+      testdata = tempfile.TemporaryFile('wb+')
+      testdata.write(b"oink\n")
+      testdata.flush()
+      testdata.seek(0)
+      api.push_blob(container='test', data=typing.cast(typing.BinaryIO, testdata), private=True, valid_for='2w')
+    expires = datetime.today()+timedelta(weeks=2)
+    self.assertAlmostEqual(datetime.fromisoformat(mock_post.call_args[1]['params']['expiresAt']), expires, delta=timedelta(seconds=2))
 
   @mock.patch.dict(os.environ, { 'HINK_API_BASE': 'http://testha.se', 'HINK_API_KEY': 'secret'})
   def test_tar_exclude(self):
