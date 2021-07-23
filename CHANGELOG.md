@@ -1,4 +1,4 @@
-# next
+# v0.3.3 (2021-07-23)
 
 - private flag for data push
 - expiresAt flag for data push
