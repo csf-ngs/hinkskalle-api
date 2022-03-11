@@ -13,7 +13,7 @@ def serialize{{ classname }}(obj: {{ classname }}) -> dict:
 @dataclass
 class {{ classname }}:
   {{ utils.auto_attributes(fields) }}
-  image_hash: typing.Optional[str] = None
+  image_hash: typing.Optional[list[str]] = None
 
   def __str__(self):
     return f"""- filename: {self.filename}

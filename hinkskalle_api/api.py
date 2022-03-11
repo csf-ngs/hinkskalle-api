@@ -94,7 +94,7 @@ class HinkApi:
     self.user = User(username=ret.get('username'), isAdmin=ret.get('isAdmin'))
     return self.user
   
-  def _get_entity(self, entity: str = None) -> str:
+  def _get_entity(self, entity: typing.Optional[str] = None) -> str:
     if not self.user:
       self.get_current_user()
     if not entity and self.user:
@@ -118,13 +118,13 @@ class HinkApi:
     self.token=plainToToken(token.get('token'))
 
 
-  def list_collections(self, entity: str=None) -> typing.List[Collection]:
+  def list_collections(self, entity: typing.Optional[str]=None) -> typing.List[Collection]:
     entity = self._get_entity(entity)
 
     colls = self.get(f'/v1/collections/{entity}')
     return [ plainToCollection(c) for c in colls ]
   
-  def get_collection(self, collection: str, entity: str=None) -> Collection:
+  def get_collection(self, collection: str, entity: typing.Optional[str]=None) -> Collection:
     entity = self._get_entity(entity)
     coll = self.get(f'/v1/collections/{entity}/{collection}')
     return plainToCollection(coll)
@@ -137,13 +137,13 @@ class HinkApi:
     coll = self.put(f'/v1/collections/{collection.entityName}/{collection.name}', serializeCollection(collection))
     return plainToCollection(coll)
 
-  def list_containers(self, collection: str='default', entity: str=None) -> typing.List[Container]:
+  def list_containers(self, collection: str='default', entity: typing.Optional[str]=None) -> typing.List[Container]:
     entity = self._get_entity(entity)
 
     containers = self.get(f'/v1/containers/{entity}/{collection}')
     return [ plainToContainer(c) for c in containers ]
   
-  def get_container(self, container: str, collection: str='default', entity: str=None) -> Container:
+  def get_container(self, container: str, collection: str='default', entity: typing.Optional[str]=None) -> Container:
     entity = self._get_entity(entity)
 
     cont = self.get(f'/v1/containers/{entity}/{collection}/{container}')
@@ -158,7 +158,7 @@ class HinkApi:
     return plainToContainer(cont)
 
 
-  def list_tags(self, container: str, collection: str='default', entity: str=None) -> typing.List[Tag]:
+  def list_tags(self, container: str, collection: str='default', entity: typing.Optional[str]=None) -> typing.List[Tag]:
     entity = self._get_entity(entity)
 
     ret = self.get(f'/v1/containers/{entity}/{collection}/{container}')
@@ -169,7 +169,7 @@ class HinkApi:
         ret.append(Tag(name=tag, arch=arch))
     return ret
 
-  def list_manifests(self, container: str, collection: str='default', entity: str=None) -> typing.List[Manifest]:
+  def list_manifests(self, container: str, collection: str='default', entity: typing.Optional[str]=None) -> typing.List[Manifest]:
     entity = self._get_entity(entity)
 
     manifests = self.get(f'/v1/containers/{entity}/{collection}/{container}/manifests')
@@ -180,7 +180,7 @@ class HinkApi:
       ret.append(mani)
     return ret
     
-  def get_manifest(self, container: str, collection: str='default', entity: str=None, tag: str=None, hash: str=None) -> Manifest:
+  def get_manifest(self, container: str, collection: str='default', entity: typing.Optional[str]=None, tag: typing.Optional[str]=None, hash: typing.Optional[str]=None) -> Manifest:
     entity = self._get_entity(entity)
     manifests = self.list_manifests(container, collection, entity)
     to_fetch: typing.Optional[Manifest] = None
@@ -197,7 +197,7 @@ class HinkApi:
       raise Exception(f"Manifest {entity}/{collection}/{container}:{tag}/{hash} not found")
     return to_fetch
 
-  def fetch_blob(self, container: str, collection: str='default', entity: str=None, tag: str=None, hash: str=None, out: str = None, progress=False) -> str:
+  def fetch_blob(self, container: str, collection: str='default', entity: typing.Optional[str]=None, tag: typing.Optional[str]=None, hash: typing.Optional[str]=None, out: typing.Optional[str] = None, progress=False) -> str:
     to_fetch = self.get_manifest(container=container, collection=collection, entity=entity, tag=tag, hash=hash)
 
     ret = requests.get(f'{self.base}/v1/manifests/{to_fetch.id}/download', headers=self._make_headers(), stream=True)
@@ -235,7 +235,7 @@ class HinkApi:
 
     return outfn
     
-  def push_file(self, tag: str, container: str, filename: str, collection: str = 'default', entity: str = None, progress=False, excludes: typing.List[typing.Union[typing.Pattern, str]]=[], private=False, valid_for=None) -> str:
+  def push_file(self, tag: str, container: str, filename: str, collection: str = 'default', entity: typing.Optional[str] = None, progress=False, excludes: typing.List[typing.Union[typing.Pattern, str]]=[], private=False, valid_for=None) -> str:
     entity = self._get_entity(entity)
     is_tar = False
     orig_filename = filename
@@ -278,7 +278,7 @@ class HinkApi:
     return image_hash
 
 
-  def push_manifest(self, manifest: dict, tag: str, container: str, collection: str = 'default', entity: str = None) -> str:
+  def push_manifest(self, manifest: dict, tag: str, container: str, collection: str = 'default', entity: typing.Optional[str] = None) -> str:
     json_manifest = json.dumps(manifest).encode('utf8')
     hl = hashlib.sha256()
     hl.update(json_manifest)
@@ -333,7 +333,7 @@ class HinkApi:
     tmp.close()
     return tmptar
 
-  def push_blob(self, container: str, data: typing.BinaryIO, collection: str = 'default', entity: str = None, progress=False, private=False, valid_for=None) -> typing.Tuple[str, int]:
+  def push_blob(self, container: str, data: typing.BinaryIO, collection: str = 'default', entity: typing.Optional[str] = None, progress=False, private=False, valid_for=None) -> typing.Tuple[str, int]:
     hl = hashlib.sha256()
     if progress:
       prog = click.progressbar(length=os.path.getsize(data.name) if hasattr(data, 'name') else 0,label='👀 Checksumming:')
@@ -406,7 +406,7 @@ class HinkApi:
       click.echo("")
     return image_hash, size
 
-  def get_download_token(self, manifest: typing.Optional[Manifest]=None, tag: str = None, container: str = None, collection: str = 'default', entity: str = None, expiration=None, username=None) -> str:
+  def get_download_token(self, manifest: typing.Optional[Manifest]=None, tag: typing.Optional[str] = None, container: typing.Optional[str] = None, collection: str = 'default', entity: typing.Optional[str] = None, expiration=None, username=None) -> str:
     if not manifest:
       entity = self._get_entity(entity)
       if not container or not tag:

@@ -405,7 +405,7 @@ class Manifest:
   type: typing.Optional[str] = None
   updatedAt: typing.Optional[datetime] = None
   
-  image_hash: typing.Optional[str] = None
+  image_hash: typing.Optional[list[str]] = None
 
   def __str__(self):
     return f"""- filename: {self.filename}
