@@ -1,3 +1,7 @@
+# v0.3.4 (2022-03-11)
+
+- model de/serialization fixed (False/''/None handling)
+
 # v0.3.3 (2021-07-23)
 
 - private flag for data push
