@@ -29,6 +29,7 @@ steps:
   commands:
   - mkdir -p /srv/${DRONE_REPO}/${DRONE_BUILD_NUMBER}
   - cp test_report.html /srv/${DRONE_REPO}/${DRONE_BUILD_NUMBER}/test-report.html
+  - cp -r htmlcov /srv/${DRONE_REPO}/${DRONE_BUILD_NUMBER}/
 volumes:
 - name: assets
   host:
