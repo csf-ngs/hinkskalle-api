@@ -37,7 +37,6 @@ setup(
     name='hinkskalle_api',
     packages=find_packages(include=['hinkskalle_api', 'hinkskalle_api.*']),
     test_suite='tests',
-    tests_require=test_requirements,
     url='https://github.com/h3kker/hinkskalle_api',
     version='0.3.4',
     zip_safe=False,
@@ -46,4 +45,7 @@ setup(
             'hinkli = hinkskalle_api.cli:cli',
         ],
     },
+    extras_require={
+        'test': test_requirements,
+    }
 )
