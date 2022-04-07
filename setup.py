@@ -12,7 +12,7 @@ with open('CHANGELOG.md') as history_file:
 
 requirements = ['Click>=7.0', 'requests', 'PyYAML', 'click_log', 'humanize' ]
 
-test_requirements = [ 'coverage', 'nose2' ]
+test_requirements = [ 'coverage', 'nose2', 'nose2-html-report', 'nose2[coverage_plugin]' ]
 
 setup(
     author="Heinz Axelsson-Ekker",

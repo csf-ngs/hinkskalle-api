@@ -10,8 +10,7 @@ steps:
 - name: testhase
   image: python:3.8
   commands:
-  - pip3 install nose2
-  - pip3 install -e .
+  - pip3 install -e '.[test]'
   - nose2
 - name: bauhaus
   image: docker.ngs.vbcf.ac.at/singularity-builder

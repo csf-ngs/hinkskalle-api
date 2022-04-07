@@ -1,0 +1,34 @@
+---
+name: hinkskalle-api
+kind: pipeline
+
+steps:
+- name: fetch
+  image: drone/git
+  commands:
+    - git fetch --tags
+- name: testhase
+  image: python:3.8
+  commands:
+  - pip3 install -e '.[test]'
+  - nose2
+- name: reporthinaus
+  depends_on:
+  - testhase
+  image: alpine
+  volumes:
+  - name: assets
+    path: /srv
+  when:
+    status:
+      - failure
+      - success
+    event:
+      exclude:
+        - pull_request
+  commands:
+  - mkdir -p /srv/${DRONE_REPO}/${DRONE_BUILD_NUMBER}
+  - cp test_report.html /srv/${DRONE_REPO}/${DRONE_BUILD_NUMBER}/test-report.html
+- name: assets
+  host:
+    path: /home/docker/caddy/site/knecht
