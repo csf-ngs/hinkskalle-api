@@ -10,7 +10,7 @@ from humanize import naturalsize
 def plainToCollection(json: dict) -> Collection:
   obj = Collection()
   
-  obj.containers = json.get('containers', [])
+  obj.containers = json['containers'] if json.get('containers') is not None and isinstance(json['containers'], list) else []
   obj.createdAt = datetime.fromisoformat(json['createdAt']) if json.get('createdAt') is not None else None
   obj.createdBy = json.get('createdBy')
   obj.customData = json.get('customData')
@@ -30,21 +30,12 @@ def plainToCollection(json: dict) -> Collection:
 
 def serializeCollection(obj: Collection) -> dict:
   json = {}
-  json['containers'] = obj.containers
-  json['createdAt'] = obj.createdAt.isoformat() if obj.createdAt else None
   json['createdBy'] = obj.createdBy
   json['customData'] = obj.customData
-  json['deleted'] = obj.deleted
-  json['deletedAt'] = obj.deletedAt.isoformat() if obj.deletedAt else None
   json['description'] = obj.description
   json['entity'] = obj.entity
-  json['entityName'] = obj.entityName
-  json['id'] = obj.id
   json['name'] = obj.name
   json['private'] = obj.private
-  json['size'] = obj.size
-  json['updatedAt'] = obj.updatedAt.isoformat() if obj.updatedAt else None
-  json['usedQuota'] = obj.usedQuota
   
   return json
 
@@ -94,7 +85,7 @@ def plainToContainer(json: dict) -> Container:
   obj.id = json.get('id')
   obj.imageTags = json.get('imageTags')
   
-  obj.images = json.get('images', [])
+  obj.images = json['images'] if json.get('images') is not None and isinstance(json['images'], list) else []
   obj.name = json.get('name')
   obj.private = bool(json['private']) if json.get('private') is not None else None
   obj.readOnly = bool(json['readOnly']) if json.get('readOnly') is not None else None
@@ -109,30 +100,14 @@ def plainToContainer(json: dict) -> Container:
 
 def serializeContainer(obj: Container) -> dict:
   json = {}
-  json['archTags'] = obj.archTags
   json['collection'] = obj.collection
-  json['collectionName'] = obj.collectionName
-  json['createdAt'] = obj.createdAt.isoformat() if obj.createdAt else None
   json['createdBy'] = obj.createdBy
   json['customData'] = obj.customData
-  json['deleted'] = obj.deleted
-  json['deletedAt'] = obj.deletedAt.isoformat() if obj.deletedAt else None
   json['description'] = obj.description
-  json['downloadCount'] = obj.downloadCount
-  json['entity'] = obj.entity
-  json['entityName'] = obj.entityName
   json['fullDescription'] = obj.fullDescription
-  json['id'] = obj.id
-  json['imageTags'] = obj.imageTags
-  json['images'] = obj.images
   json['name'] = obj.name
   json['private'] = obj.private
   json['readOnly'] = obj.readOnly
-  json['size'] = obj.size
-  json['stars'] = obj.stars
-  json['type'] = obj.type
-  json['updatedAt'] = obj.updatedAt.isoformat() if obj.updatedAt else None
-  json['usedQuota'] = obj.usedQuota
   json['vcsUrl'] = obj.vcsUrl
   
   return json
@@ -178,7 +153,7 @@ class Container:
 def plainToEntity(json: dict) -> Entity:
   obj = Entity()
   
-  obj.collections = json.get('collections', [])
+  obj.collections = json['collections'] if json.get('collections') is not None and isinstance(json['collections'], list) else []
   obj.createdAt = datetime.fromisoformat(json['createdAt']) if json.get('createdAt') is not None else None
   obj.createdBy = json.get('createdBy')
   obj.customData = json.get('customData')
@@ -197,20 +172,12 @@ def plainToEntity(json: dict) -> Entity:
 
 def serializeEntity(obj: Entity) -> dict:
   json = {}
-  json['collections'] = obj.collections
-  json['createdAt'] = obj.createdAt.isoformat() if obj.createdAt else None
   json['createdBy'] = obj.createdBy
   json['customData'] = obj.customData
   json['defaultPrivate'] = obj.defaultPrivate
-  json['deleted'] = obj.deleted
-  json['deletedAt'] = obj.deletedAt.isoformat() if obj.deletedAt else None
   json['description'] = obj.description
-  json['id'] = obj.id
   json['name'] = obj.name
   json['quota'] = obj.quota
-  json['size'] = obj.size
-  json['updatedAt'] = obj.updatedAt.isoformat() if obj.updatedAt else None
-  json['usedQuota'] = obj.usedQuota
   
   return json
 
@@ -249,7 +216,9 @@ def plainToUser(json: dict) -> User:
   obj.deletedAt = datetime.fromisoformat(json['deletedAt']) if json.get('deletedAt') is not None else None
   obj.email = json.get('email')
   obj.firstname = json.get('firstname')
-  obj.groups = [ plainToGroup(o) for o in json.get('groups', [])]
+  obj.groups = [ 
+    plainToGroup(o) for o in (json['groups'] if json.get('groups') is not None and isinstance(json['groups'], list) else [])
+  ]
   obj.id = json.get('id')
   obj.isActive = bool(json['isActive']) if json.get('isActive') is not None else None
   obj.isAdmin = bool(json['isAdmin']) if json.get('isAdmin') is not None else None
@@ -262,19 +231,13 @@ def plainToUser(json: dict) -> User:
 
 def serializeUser(obj: User) -> dict:
   json = {}
-  json['createdAt'] = obj.createdAt.isoformat() if obj.createdAt else None
-  json['createdBy'] = obj.createdBy
-  json['deleted'] = obj.deleted
-  json['deletedAt'] = obj.deletedAt.isoformat() if obj.deletedAt else None
   json['email'] = obj.email
   json['firstname'] = obj.firstname
   json['groups'] = [ serializeGroup(o) for o in obj.groups ] if obj.groups is not None else []
-  json['id'] = obj.id
   json['isActive'] = obj.isActive
   json['isAdmin'] = obj.isAdmin
   json['lastname'] = obj.lastname
   json['source'] = obj.source
-  json['updatedAt'] = obj.updatedAt.isoformat() if obj.updatedAt else None
   json['username'] = obj.username
   
   return json
@@ -314,14 +277,8 @@ def plainToGroup(json: dict) -> Group:
 
 def serializeGroup(obj: Group) -> dict:
   json = {}
-  json['createdAt'] = obj.createdAt.isoformat() if obj.createdAt else None
-  json['createdBy'] = obj.createdBy
-  json['deleted'] = obj.deleted
-  json['deletedAt'] = obj.deletedAt.isoformat() if obj.deletedAt else None
   json['email'] = obj.email
-  json['id'] = obj.id
   json['name'] = obj.name
-  json['updatedAt'] = obj.updatedAt.isoformat() if obj.updatedAt else None
   
   return json
 
@@ -355,9 +312,9 @@ def plainToManifest(json: dict) -> Manifest:
   obj.hash = json.get('hash')
   obj.id = json.get('id')
   
-  obj.images = json.get('images', [])
+  obj.images = json['images'] if json.get('images') is not None and isinstance(json['images'], list) else []
   
-  obj.tags = json.get('tags', [])
+  obj.tags = json['tags'] if json.get('tags') is not None and isinstance(json['tags'], list) else []
   obj.total_size = json.get('total_size')
   obj.type = json.get('type')
   obj.updatedAt = datetime.fromisoformat(json['updatedAt']) if json.get('updatedAt') is not None else None
@@ -367,23 +324,10 @@ def plainToManifest(json: dict) -> Manifest:
 def serializeManifest(obj: Manifest) -> dict:
   json = {}
   json['collection'] = obj.collection
-  json['collectionName'] = obj.collectionName
   json['container'] = obj.container
-  json['containerName'] = obj.containerName
   json['content'] = obj.content
-  json['createdAt'] = obj.createdAt.isoformat() if obj.createdAt else None
-  json['createdBy'] = obj.createdBy
-  json['downloadCount'] = obj.downloadCount
   json['entity'] = obj.entity
-  json['entityName'] = obj.entityName
-  json['filename'] = obj.filename
   json['hash'] = obj.hash
-  json['id'] = obj.id
-  json['images'] = obj.images
-  json['tags'] = obj.tags
-  json['total_size'] = obj.total_size
-  json['type'] = obj.type
-  json['updatedAt'] = obj.updatedAt.isoformat() if obj.updatedAt else None
   
   return json
 
@@ -421,7 +365,7 @@ class Manifest:
 def plainToTagData(json: dict) -> TagData:
   obj = TagData()
   
-  obj.tags = json.get('tags', [])
+  obj.tags = json['tags'] if json.get('tags') is not None and isinstance(json['tags'], list) else []
   
   return obj
 
@@ -458,15 +402,7 @@ def plainToToken(json: dict) -> Token:
 def serializeToken(obj: Token) -> dict:
   json = {}
   json['comment'] = obj.comment
-  json['createdAt'] = obj.createdAt.isoformat() if obj.createdAt else None
-  json['createdBy'] = obj.createdBy
-  json['deleted'] = obj.deleted
-  json['deletedAt'] = obj.deletedAt.isoformat() if obj.deletedAt else None
   json['expiresAt'] = obj.expiresAt.isoformat() if obj.expiresAt else None
-  json['id'] = obj.id
-  json['source'] = obj.source
-  json['token'] = obj.token
-  json['updatedAt'] = obj.updatedAt.isoformat() if obj.updatedAt else None
   
   json['user'] = serializeUser(obj.user) if obj.user is not None else None
   
