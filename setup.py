@@ -38,7 +38,7 @@ setup(
     packages=find_packages(include=['hinkskalle_api', 'hinkskalle_api.*']),
     test_suite='tests',
     url='https://github.com/h3kker/hinkskalle_api',
-    version='0.3.4',
+    version='0.3.5',
     zip_safe=False,
     entry_points={
         'console_scripts': [
