@@ -9,6 +9,7 @@ from humanize import naturalsize
 
 def plainToCollection(json: dict) -> Collection:
   obj = Collection()
+  obj.canEdit = bool(json['canEdit']) if json.get('canEdit') is not None else None
   
   obj.containers = json['containers'] if json.get('containers') is not None and isinstance(json['containers'], list) else []
   obj.createdAt = datetime.fromisoformat(json['createdAt']) if json.get('createdAt') is not None else None
@@ -41,6 +42,7 @@ def serializeCollection(obj: Collection) -> dict:
 
 @dataclass
 class Collection:
+  canEdit: typing.Optional[bool] = None
   containers: list[str] = field(default_factory=list)
   createdAt: typing.Optional[datetime] = None
   createdBy: typing.Optional[str] = None
@@ -70,6 +72,7 @@ class Collection:
 def plainToContainer(json: dict) -> Container:
   obj = Container()
   obj.archTags = json.get('archTags')
+  obj.canEdit = bool(json['canEdit']) if json.get('canEdit') is not None else None
   obj.collection = json.get('collection')
   obj.collectionName = json.get('collectionName')
   obj.createdAt = datetime.fromisoformat(json['createdAt']) if json.get('createdAt') is not None else None
@@ -115,6 +118,7 @@ def serializeContainer(obj: Container) -> dict:
 @dataclass
 class Container:
   archTags: typing.Optional[dict] = None
+  canEdit: typing.Optional[bool] = None
   collection: typing.Optional[str] = None
   collectionName: typing.Optional[str] = None
   createdAt: typing.Optional[datetime] = None
@@ -152,6 +156,7 @@ class Container:
 
 def plainToEntity(json: dict) -> Entity:
   obj = Entity()
+  obj.canEdit = bool(json['canEdit']) if json.get('canEdit') is not None else None
   
   obj.collections = json['collections'] if json.get('collections') is not None and isinstance(json['collections'], list) else []
   obj.createdAt = datetime.fromisoformat(json['createdAt']) if json.get('createdAt') is not None else None
@@ -161,7 +166,9 @@ def plainToEntity(json: dict) -> Entity:
   obj.deleted = bool(json['deleted']) if json.get('deleted') is not None else None
   obj.deletedAt = datetime.fromisoformat(json['deletedAt']) if json.get('deletedAt') is not None else None
   obj.description = json.get('description')
+  obj.groupRef = json.get('groupRef')
   obj.id = json.get('id')
+  obj.isGroup = bool(json['isGroup']) if json.get('isGroup') is not None else None
   obj.name = json.get('name')
   obj.quota = json.get('quota')
   obj.size = json.get('size')
@@ -183,6 +190,7 @@ def serializeEntity(obj: Entity) -> dict:
 
 @dataclass
 class Entity:
+  canEdit: typing.Optional[bool] = None
   collections: list[str] = field(default_factory=list)
   createdAt: typing.Optional[datetime] = None
   createdBy: typing.Optional[str] = None
@@ -191,7 +199,9 @@ class Entity:
   deleted: typing.Optional[bool] = None
   deletedAt: typing.Optional[datetime] = None
   description: typing.Optional[str] = None
+  groupRef: typing.Optional[str] = None
   id: typing.Optional[str] = None
+  isGroup: typing.Optional[bool] = None
   name: typing.Optional[str] = None
   quota: typing.Optional[int] = None
   size: typing.Optional[int] = None
@@ -208,17 +218,102 @@ class Entity:
 
 
 
+def plainToImage(json: dict) -> Image:
+  obj = Image()
+  obj.arch = json.get('arch')
+  obj.blob = json.get('blob')
+  obj.canEdit = bool(json['canEdit']) if json.get('canEdit') is not None else None
+  obj.collection = json.get('collection')
+  obj.collectionName = json.get('collectionName')
+  obj.container = json.get('container')
+  obj.containerDownloads = json.get('containerDownloads')
+  obj.containerName = json.get('containerName')
+  obj.containerStars = json.get('containerStars')
+  obj.createdAt = datetime.fromisoformat(json['createdAt']) if json.get('createdAt') is not None else None
+  obj.createdBy = json.get('createdBy')
+  obj.customData = json.get('customData')
+  obj.deleted = bool(json['deleted']) if json.get('deleted') is not None else None
+  obj.deletedAt = datetime.fromisoformat(json['deletedAt']) if json.get('deletedAt') is not None else None
+  obj.description = json.get('description')
+  obj.downloadCount = json.get('downloadCount')
+  obj.encrypted = bool(json['encrypted']) if json.get('encrypted') is not None else None
+  obj.entity = json.get('entity')
+  obj.entityName = json.get('entityName')
+  obj.expiresAt = datetime.fromisoformat(json['expiresAt']) if json.get('expiresAt') is not None else None
+  
+  obj.fingerprints = json['fingerprints'] if json.get('fingerprints') is not None and isinstance(json['fingerprints'], list) else []
+  obj.hash = json.get('hash')
+  obj.id = json.get('id')
+  obj.signatureVerified = bool(json['signatureVerified']) if json.get('signatureVerified') is not None else None
+  obj.signed = bool(json['signed']) if json.get('signed') is not None else None
+  obj.size = json.get('size')
+  
+  obj.tags = json['tags'] if json.get('tags') is not None and isinstance(json['tags'], list) else []
+  obj.type = json.get('type')
+  obj.updatedAt = datetime.fromisoformat(json['updatedAt']) if json.get('updatedAt') is not None else None
+  obj.uploadState = json.get('uploadState')
+  
+  return obj
+
+def serializeImage(obj: Image) -> dict:
+  json = {}
+  json['arch'] = obj.arch
+  json['blob'] = obj.blob
+  json['container'] = obj.container
+  json['customData'] = obj.customData
+  json['description'] = obj.description
+  json['encrypted'] = obj.encrypted
+  json['expiresAt'] = obj.expiresAt.isoformat() if obj.expiresAt else None
+  json['hash'] = obj.hash
+  json['uploadState'] = obj.uploadState
+  
+  return json
+
+@dataclass
+class Image:
+  arch: typing.Optional[str] = None
+  blob: typing.Optional[str] = None
+  canEdit: typing.Optional[bool] = None
+  collection: typing.Optional[str] = None
+  collectionName: typing.Optional[str] = None
+  container: typing.Optional[str] = None
+  containerDownloads: typing.Optional[int] = None
+  containerName: typing.Optional[str] = None
+  containerStars: typing.Optional[int] = None
+  createdAt: typing.Optional[datetime] = None
+  createdBy: typing.Optional[str] = None
+  customData: typing.Optional[str] = None
+  deleted: typing.Optional[bool] = None
+  deletedAt: typing.Optional[datetime] = None
+  description: typing.Optional[str] = None
+  downloadCount: typing.Optional[int] = None
+  encrypted: typing.Optional[bool] = None
+  entity: typing.Optional[str] = None
+  entityName: typing.Optional[str] = None
+  expiresAt: typing.Optional[datetime] = None
+  fingerprints: list[str] = field(default_factory=list)
+  hash: typing.Optional[str] = None
+  id: typing.Optional[str] = None
+  signatureVerified: typing.Optional[bool] = None
+  signed: typing.Optional[bool] = None
+  size: typing.Optional[int] = None
+  tags: list[str] = field(default_factory=list)
+  type: typing.Optional[str] = None
+  updatedAt: typing.Optional[datetime] = None
+  uploadState: typing.Optional[str] = None
+  
+
+
+
 def plainToUser(json: dict) -> User:
   obj = User()
+  obj.canEdit = bool(json['canEdit']) if json.get('canEdit') is not None else None
   obj.createdAt = datetime.fromisoformat(json['createdAt']) if json.get('createdAt') is not None else None
   obj.createdBy = json.get('createdBy')
   obj.deleted = bool(json['deleted']) if json.get('deleted') is not None else None
   obj.deletedAt = datetime.fromisoformat(json['deletedAt']) if json.get('deletedAt') is not None else None
   obj.email = json.get('email')
   obj.firstname = json.get('firstname')
-  obj.groups = [ 
-    plainToGroup(o) for o in (json['groups'] if json.get('groups') is not None and isinstance(json['groups'], list) else [])
-  ]
   obj.id = json.get('id')
   obj.isActive = bool(json['isActive']) if json.get('isActive') is not None else None
   obj.isAdmin = bool(json['isAdmin']) if json.get('isAdmin') is not None else None
@@ -233,7 +328,6 @@ def serializeUser(obj: User) -> dict:
   json = {}
   json['email'] = obj.email
   json['firstname'] = obj.firstname
-  json['groups'] = [ serializeGroup(o) for o in obj.groups ] if obj.groups is not None else []
   json['isActive'] = obj.isActive
   json['isAdmin'] = obj.isAdmin
   json['lastname'] = obj.lastname
@@ -244,13 +338,13 @@ def serializeUser(obj: User) -> dict:
 
 @dataclass
 class User:
+  canEdit: typing.Optional[bool] = None
   createdAt: typing.Optional[datetime] = None
   createdBy: typing.Optional[str] = None
   deleted: typing.Optional[bool] = None
   deletedAt: typing.Optional[datetime] = None
   email: typing.Optional[str] = None
   firstname: typing.Optional[str] = None
-  groups: list[Group] = field(default_factory=list)
   id: typing.Optional[str] = None
   isActive: typing.Optional[bool] = None
   isAdmin: typing.Optional[bool] = None
@@ -260,23 +354,36 @@ class User:
   username: typing.Optional[str] = None
   
 
+  @property
+  def is_admin(self) -> bool:
+    return self.isAdmin if self.isAdmin is not None else False
+
 
 
 def plainToGroup(json: dict) -> Group:
   obj = Group()
+  obj.canEdit = bool(json['canEdit']) if json.get('canEdit') is not None else None
+  obj.collections = json.get('collections')
   obj.createdAt = datetime.fromisoformat(json['createdAt']) if json.get('createdAt') is not None else None
   obj.createdBy = json.get('createdBy')
   obj.deleted = bool(json['deleted']) if json.get('deleted') is not None else None
   obj.deletedAt = datetime.fromisoformat(json['deletedAt']) if json.get('deletedAt') is not None else None
+  obj.description = json.get('description')
   obj.email = json.get('email')
+  obj.entityRef = json.get('entityRef')
   obj.id = json.get('id')
   obj.name = json.get('name')
   obj.updatedAt = datetime.fromisoformat(json['updatedAt']) if json.get('updatedAt') is not None else None
+  obj.users = [ 
+    plainToGroupMember(o) for o in (json['users'] if json.get('users') is not None and isinstance(json['users'], list) else [])
+  ]
   
   return obj
 
 def serializeGroup(obj: Group) -> dict:
   json = {}
+  json['createdBy'] = obj.createdBy
+  json['description'] = obj.description
   json['email'] = obj.email
   json['name'] = obj.name
   
@@ -284,14 +391,43 @@ def serializeGroup(obj: Group) -> dict:
 
 @dataclass
 class Group:
+  canEdit: typing.Optional[bool] = None
+  collections: typing.Optional[int] = None
   createdAt: typing.Optional[datetime] = None
   createdBy: typing.Optional[str] = None
   deleted: typing.Optional[bool] = None
   deletedAt: typing.Optional[datetime] = None
+  description: typing.Optional[str] = None
   email: typing.Optional[str] = None
+  entityRef: typing.Optional[str] = None
   id: typing.Optional[str] = None
   name: typing.Optional[str] = None
   updatedAt: typing.Optional[datetime] = None
+  users: list[GroupMember] = field(default_factory=list)
+  
+
+
+
+def plainToGroupMember(json: dict) -> GroupMember:
+  obj = GroupMember()
+  obj.role = json.get('role')
+  
+  obj.user = plainToUser(json['user']) if json.get('user') is not None else None
+  
+  return obj
+
+def serializeGroupMember(obj: GroupMember) -> dict:
+  json = {}
+  json['role'] = obj.role
+  
+  json['user'] = serializeUser(obj.user) if obj.user is not None else None
+  
+  return json
+
+@dataclass
+class GroupMember:
+  role: typing.Optional[str] = None
+  user: typing.Optional[User] = None
   
 
 
@@ -390,9 +526,10 @@ def plainToToken(json: dict) -> Token:
   obj.deleted = bool(json['deleted']) if json.get('deleted') is not None else None
   obj.deletedAt = datetime.fromisoformat(json['deletedAt']) if json.get('deletedAt') is not None else None
   obj.expiresAt = datetime.fromisoformat(json['expiresAt']) if json.get('expiresAt') is not None else None
+  obj.generatedToken = json.get('generatedToken')
   obj.id = json.get('id')
+  obj.key_uid = json.get('key_uid')
   obj.source = json.get('source')
-  obj.token = json.get('token')
   obj.updatedAt = datetime.fromisoformat(json['updatedAt']) if json.get('updatedAt') is not None else None
   
   obj.user = plainToUser(json['user']) if json.get('user') is not None else None
@@ -416,9 +553,10 @@ class Token:
   deleted: typing.Optional[bool] = None
   deletedAt: typing.Optional[datetime] = None
   expiresAt: typing.Optional[datetime] = None
+  generatedToken: typing.Optional[str] = None
   id: typing.Optional[str] = None
+  key_uid: typing.Optional[str] = None
   source: typing.Optional[str] = None
-  token: typing.Optional[str] = None
   updatedAt: typing.Optional[datetime] = None
   user: typing.Optional[User] = None
   

@@ -13,7 +13,3 @@ def serialize{{ classname }}(obj: {{ classname }}) -> dict:
 @dataclass
 class {{ classname }}:
   {{ utils.auto_attributes(fields) }}
-
-  @property
-  def is_admin(self) -> bool:
-    return self.isAdmin if self.isAdmin is not None else False
