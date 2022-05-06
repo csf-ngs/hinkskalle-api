@@ -1,3 +1,7 @@
+# v0.3.5 (2022-05-06)
+
+- model updates, skalle-cli compat
+
 # v0.3.4 (2022-03-11)
 
 - model de/serialization fixed (False/''/None handling)
